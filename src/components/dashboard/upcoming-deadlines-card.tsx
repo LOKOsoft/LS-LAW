@@ -14,7 +14,13 @@ type DeadlineTask = {
   matter: { title: string; matterNumber: string } | null;
 };
 
-export function UpcomingDeadlinesCard({ tasks }: { tasks: DeadlineTask[] }) {
+export function UpcomingDeadlinesCard({
+  tasks,
+  basePath = "/managing-partner",
+}: {
+  tasks: DeadlineTask[];
+  basePath?: string;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -29,7 +35,7 @@ export function UpcomingDeadlinesCard({ tasks }: { tasks: DeadlineTask[] }) {
             {tasks.map((task) => (
               <Link
                 key={task.id}
-                href="/managing-partner/tasks"
+                href={`${basePath}/tasks`}
                 className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/50"
               >
                 <div className="min-w-0 flex-1">

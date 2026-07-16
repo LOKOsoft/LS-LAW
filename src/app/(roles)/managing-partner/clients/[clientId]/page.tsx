@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 import { ClientHeader } from "@/components/clients/client-header";
 import { ClientDetailTabs } from "@/components/clients/client-detail-tabs";
 import { getClientById } from "@/features/clients/queries";
-import { getManagingPartner } from "@/features/firm/queries";
+import { requireUser } from "@/lib/auth/dal";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params;
-  const [client, currentUser] = await Promise.all([getClientById(clientId), getManagingPartner()]);
+  const [client, currentUser] = await Promise.all([getClientById(clientId), requireUser()]);
 
   if (!client) notFound();
 

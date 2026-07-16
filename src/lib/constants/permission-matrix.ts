@@ -1,0 +1,40 @@
+export type AccessLevel = "F" | "C" | "V" | "—";
+
+export const PERMISSION_ROLES = [
+  "Managing Partner",
+  "Senior Partner",
+  "Partner",
+  "Associate",
+  "Jr. Associate",
+  "Legal Researcher",
+  "Paralegal",
+  "Reception",
+  "Accounts",
+  "HR",
+  "Office Mgr",
+  "Administrator",
+] as const;
+
+export const PERMISSION_MATRIX: { module: string; access: AccessLevel[] }[] = [
+  { module: "Dashboard", access: ["F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F"] },
+  { module: "Clients / Companies / Contacts", access: ["F", "C", "C", "C", "V", "V", "C", "C", "V", "—", "—", "V"] },
+  { module: "Matters / Court Cases", access: ["F", "C", "C", "C", "V", "V", "C", "—", "V", "—", "—", "V"] },
+  { module: "Hearings", access: ["F", "C", "C", "C", "V", "—", "C", "—", "—", "—", "—", "V"] },
+  { module: "Tasks", access: ["F", "C", "C", "C", "C", "C", "C", "—", "—", "—", "—", "V"] },
+  { module: "Calendar / Meetings", access: ["F", "C", "C", "C", "V", "V", "C", "C", "V", "—", "V", "V"] },
+  { module: "Notes", access: ["F", "C", "C", "C", "V", "V", "C", "—", "—", "—", "—", "V"] },
+  { module: "Documents", access: ["F", "C", "C", "C", "C", "C", "C", "—", "V", "—", "—", "V"] },
+  { module: "Document Generator", access: ["F", "C", "C", "C", "C", "V", "C", "—", "—", "—", "—", "V"] },
+  { module: "Template / Clause Library", access: ["F", "C", "C", "C", "C", "V", "C", "—", "—", "—", "—", "V"] },
+  { module: "Knowledge Base / Research", access: ["F", "V", "V", "V", "C", "F", "V", "—", "—", "—", "—", "V"] },
+  { module: "Billing / Invoices / Payments", access: ["F", "C", "C", "C", "C", "—", "—", "—", "F", "—", "—", "V"] },
+  { module: "Expenses", access: ["F", "C", "C", "C", "C", "—", "C", "—", "F", "—", "C", "V"] },
+  { module: "Finance", access: ["F", "V", "—", "—", "—", "—", "—", "—", "F", "—", "—", "V"] },
+  { module: "HR / Employees / Attendance / Leaves", access: ["V", "—", "—", "—", "—", "—", "—", "—", "—", "F", "V", "V"] },
+  { module: "Payroll (future)", access: ["V", "—", "—", "—", "—", "—", "—", "—", "C", "F", "—", "V"] },
+  { module: "Reports / Analytics", access: ["F", "C", "V", "V", "—", "—", "—", "—", "C", "C", "V", "V"] },
+  { module: "Notifications", access: ["F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F"] },
+  { module: "Settings / Firm Configuration", access: ["F", "—", "—", "—", "—", "—", "—", "—", "C", "C", "C", "F"] },
+  { module: "Audit Logs", access: ["V", "—", "—", "—", "—", "—", "—", "—", "—", "—", "—", "F"] },
+  { module: "AI Assistant", access: ["F", "F", "F", "F", "F", "F", "F", "C", "F", "F", "F", "F"] },
+];

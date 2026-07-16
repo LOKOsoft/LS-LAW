@@ -14,13 +14,20 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { navSections } from "@/lib/constants/nav";
+import { ALL_MODULE_KEYS, buildNavSections, type ModuleKey } from "@/lib/constants/nav";
 import { globalSearch, type GlobalSearchResult } from "@/features/search/actions";
 
 const emptyResults: GlobalSearchResult = { clients: [], matters: [], documents: [] };
 
-export function GlobalSearch() {
+export function GlobalSearch({
+  basePath = "/managing-partner",
+  allowedKeys = ALL_MODULE_KEYS,
+}: {
+  basePath?: string;
+  allowedKeys?: ModuleKey[];
+}) {
   const router = useRouter();
+  const navSections = buildNavSections(basePath, allowedKeys);
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<GlobalSearchResult>(emptyResults);
@@ -51,11 +58,11 @@ export function GlobalSearch() {
     return () => clearTimeout(timeout);
   }, [query]);
 
-  const runCommand = React.useCallback((action: () => void) => {
+  function runCommand(action: () => void) {
     setOpen(false);
     setQuery("");
     action();
-  }, []);
+  }
 
   const hasResults = results.clients.length + results.matters.length + results.documents.length > 0;
 
@@ -88,7 +95,7 @@ export function GlobalSearch() {
               {results.clients.length > 0 ? (
                 <CommandGroup heading="Clients">
                   {results.clients.map((c) => (
-                    <CommandItem key={c.id} onSelect={() => runCommand(() => router.push(`/managing-partner/clients/${c.id}`))}>
+                    <CommandItem key={c.id} onSelect={() => runCommand(() => router.push(`${basePath}/clients/${c.id}`))}>
                       <Users className="size-4 text-muted-foreground" />
                       {c.name}
                       <CommandShortcut>{c.clientNumber}</CommandShortcut>
@@ -99,7 +106,7 @@ export function GlobalSearch() {
               {results.matters.length > 0 ? (
                 <CommandGroup heading="Matters">
                   {results.matters.map((m) => (
-                    <CommandItem key={m.id} onSelect={() => runCommand(() => router.push(`/managing-partner/matters/${m.id}`))}>
+                    <CommandItem key={m.id} onSelect={() => runCommand(() => router.push(`${basePath}/matters/${m.id}`))}>
                       <Briefcase className="size-4 text-muted-foreground" />
                       {m.title}
                       <CommandShortcut>{m.matterNumber}</CommandShortcut>
@@ -116,7 +123,7 @@ export function GlobalSearch() {
                         key={d.id}
                         onSelect={() =>
                           runCommand(() =>
-                            router.push(d.matterId ? `/managing-partner/matters/${d.matterId}` : "/managing-partner/documents"),
+                            router.push(d.matterId ? `${basePath}/matters/${d.matterId}` : `${basePath}/documents`),
                           )
                         }
                       >

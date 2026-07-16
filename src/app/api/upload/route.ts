@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { saveFileToStorage, extensionOf } from "@/lib/storage/local-storage";
-import { getManagingPartner } from "@/features/firm/queries";
+import { getSessionUser } from "@/lib/auth/session";
 
 export async function POST(request: Request) {
+  const uploader = await getSessionUser();
+  if (!uploader) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
   const formData = await request.formData();
   const file = formData.get("file");
   const matterId = formData.get("matterId");
@@ -18,8 +23,6 @@ export async function POST(request: Request) {
   const scope = typeof matterId === "string" && matterId ? "matters" : "clients";
   const bytes = Buffer.from(await file.arrayBuffer());
   const { storagePath } = await saveFileToStorage(scope, owner, file.name, bytes);
-
-  const uploader = await getManagingPartner();
 
   const document = await prisma.documentFile.create({
     data: {

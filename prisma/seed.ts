@@ -23,11 +23,19 @@ import {
   CommunicationType,
   AnnouncementPriority,
   CourtType,
+  CaseStage,
+  NotificationType,
+  LeaveType,
+  LeaveStatus,
+  AttendanceStatus,
 } from "../src/generated/prisma/client";
+import { hashPassword } from "../src/lib/auth/password";
 
 const dbPath = path.join(process.cwd(), "prisma", "dev.db");
 const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
 const prisma = new PrismaClient({ adapter });
+
+const DEMO_PASSWORD = "Lexora@123";
 
 const STORAGE_ROOT = path.join(process.cwd(), "storage");
 
@@ -52,6 +60,12 @@ async function main() {
   console.log("Seeding LEXORA database...");
 
   // ── Reset ────────────────────────────────────────────────────────────
+  await prisma.attendanceRecord.deleteMany();
+  await prisma.leaveRequest.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.contact.deleteMany();
+  await prisma.company.deleteMany();
+  await prisma.courtCase.deleteMany();
   await prisma.activityLog.deleteMany();
   await prisma.knowledgeArticle.deleteMany();
   await prisma.courtListEntry.deleteMany();
@@ -180,22 +194,29 @@ async function main() {
     { name: "Arjun Mehta", email: "arjun.mehta@lexoralaw.com", role: Role.MANAGING_PARTNER, title: "Managing Partner", office: officeMumbai, bar: "MAH/1998/4521", target: 60 },
     { name: "Kavita Rao", email: "kavita.rao@lexoralaw.com", role: Role.SENIOR_PARTNER, title: "Senior Partner, Corporate & Commercial", office: officeMumbai, bar: "MAH/2003/6210", target: 70 },
     { name: "Rohan Deshpande", email: "rohan.deshpande@lexoralaw.com", role: Role.SENIOR_PARTNER, title: "Senior Partner, Litigation", office: officeDelhi, bar: "DEL/2001/3387", target: 70 },
+    { name: "Meera Kapoor", email: "meera.kapoor@lexoralaw.com", role: Role.PARTNER, title: "Partner, Real Estate", office: officeBengaluru, bar: "KAR/2008/2214", target: 75 },
     { name: "Ananya Iyer", email: "ananya.iyer@lexoralaw.com", role: Role.ASSOCIATE, title: "Associate, Intellectual Property", office: officeMumbai, bar: "MAH/2018/9012", target: 80 },
     { name: "Vikram Nair", email: "vikram.nair@lexoralaw.com", role: Role.ASSOCIATE, title: "Associate, Real Estate", office: officeBengaluru, bar: "KAR/2019/5544", target: 80 },
     { name: "Priya Menon", email: "priya.menon@lexoralaw.com", role: Role.ASSOCIATE, title: "Associate, Employment & Labour", office: officeMumbai, bar: "MAH/2020/7789", target: 80 },
     { name: "Karan Malhotra", email: "karan.malhotra@lexoralaw.com", role: Role.ASSOCIATE, title: "Associate, Litigation", office: officeDelhi, bar: "DEL/2020/2245", target: 80 },
+    { name: "Aditya Rao", email: "aditya.rao@lexoralaw.com", role: Role.JUNIOR_ASSOCIATE, title: "Junior Associate, Litigation", office: officeDelhi, bar: "DEL/2023/8871", target: 85 },
+    { name: "Ishaan Kulkarni", email: "ishaan.kulkarni@lexoralaw.com", role: Role.LEGAL_RESEARCHER, title: "Legal Researcher", office: officeMumbai, bar: null, target: 70 },
     { name: "Sameer Khan", email: "sameer.khan@lexoralaw.com", role: Role.PARALEGAL, title: "Senior Paralegal", office: officeMumbai, bar: null, target: 85 },
     { name: "Divya Krishnan", email: "divya.krishnan@lexoralaw.com", role: Role.PARALEGAL, title: "Paralegal", office: officeDelhi, bar: null, target: 85 },
     { name: "Neha Sharma", email: "neha.sharma@lexoralaw.com", role: Role.RECEPTION, title: "Front Office Executive", office: officeMumbai, bar: null, target: 0 },
     { name: "Rahul Verma", email: "rahul.verma@lexoralaw.com", role: Role.ACCOUNTS, title: "Finance Manager", office: officeMumbai, bar: null, target: 0 },
     { name: "Fatima Sheikh", email: "fatima.sheikh@lexoralaw.com", role: Role.HR, title: "HR Manager", office: officeMumbai, bar: null, target: 0 },
+    { name: "Ritu Chawla", email: "ritu.chawla@lexoralaw.com", role: Role.OFFICE_MANAGER, title: "Office Manager, Mumbai", office: officeMumbai, bar: null, target: 0 },
+    { name: "Vivek Anand", email: "vivek.anand@lexoralaw.com", role: Role.ADMINISTRATOR, title: "System Administrator", office: officeMumbai, bar: null, target: 0 },
   ];
+  const demoPasswordHash = hashPassword(DEMO_PASSWORD);
   const users = await Promise.all(
     userDefs.map((u) =>
       prisma.user.create({
         data: {
           name: u.name,
           email: u.email,
+          passwordHash: demoPasswordHash,
           phone: `+91 98${randInt(10000000, 99999999)}`,
           role: u.role,
           title: u.title,
@@ -208,10 +229,10 @@ async function main() {
     ),
   );
   const [
-    arjun, kavita, rohan, ananya, vikram, priya, karan, sameer, divya, neha, rahul, fatima,
+    arjun, kavita, rohan, meera, ananya, vikram, priya, karan, aditya, ishaan, sameer, divya, neha, rahul, fatima, ritu, vivek,
   ] = users;
-  const attorneys = [arjun, kavita, rohan, ananya, vikram, priya, karan];
-  const fileHandlers = [ananya, vikram, priya, karan, sameer, divya];
+  const attorneys = [arjun, kavita, rohan, meera, ananya, vikram, priya, karan, aditya];
+  const fileHandlers = [ananya, vikram, priya, karan, aditya, sameer, divya];
 
   // ── Clients ──────────────────────────────────────────────────────────
   const clientDefs = [
@@ -257,6 +278,19 @@ async function main() {
       }),
     ),
   );
+
+  // ── Client Portal demo user ──────────────────────────────────────────
+  const clientPortalUser = await prisma.user.create({
+    data: {
+      name: "Novatech Solutions — Portal Access",
+      email: "portal@novatechsolutions.com",
+      passwordHash: demoPasswordHash,
+      role: Role.CLIENT,
+      title: "Client Portal User",
+      clientId: clients[4].id,
+      utilizationTarget: 0,
+    },
+  });
 
   // ── Matters ──────────────────────────────────────────────────────────
   const matterDefs: {
@@ -388,6 +422,72 @@ async function main() {
     },
   });
 
+  // ── Court cases (litigation matters) ────────────────────────────────
+  const courtTypeByName: Record<string, CourtType> = {
+    "Bombay High Court": CourtType.HIGH_COURT,
+    "Delhi High Court": CourtType.HIGH_COURT,
+    "Karnataka High Court": CourtType.HIGH_COURT,
+    "NCLT Mumbai": CourtType.TRIBUNAL,
+    "City Civil Court, Mumbai": CourtType.DISTRICT_COURT,
+    "District Court, Pune": CourtType.DISTRICT_COURT,
+    "National Green Tribunal": CourtType.TRIBUNAL,
+    "Labour Court, Mumbai": CourtType.TRIBUNAL,
+    "Consumer Disputes Redressal Commission": CourtType.CONSUMER_FORUM,
+  };
+  const caseStages = [CaseStage.FILING, CaseStage.PRE_TRIAL, CaseStage.TRIAL, CaseStage.ARGUMENTS, CaseStage.JUDGMENT_RESERVED];
+  for (const [i, matter] of matters.entries()) {
+    const def = matterDefs[i];
+    if (def.pa !== paLitigation) continue;
+    const courtName = rand(courts);
+    const isClosed = def.status === MatterStatus.CLOSED || def.status === MatterStatus.ARCHIVED;
+    await prisma.courtCase.create({
+      data: {
+        matterId: matter.id,
+        caseNumber: `${rand(["CS", "OS", "WP", "MA", "CA"])}/${randInt(100, 999)}/${2024 + randInt(0, 2)}`,
+        courtType: courtTypeByName[courtName] ?? CourtType.DISTRICT_COURT,
+        courtName,
+        filingDate: subDays(matter.openedDate, randInt(0, 10)),
+        judge: `Hon'ble Justice ${rand(["A. Kulkarni", "S. Bansal", "R. Nagarajan", "P. Choudhary", "M. Iyengar"])}`,
+        stage: isClosed ? CaseStage.DISPOSED : rand(caseStages),
+        nextHearingDate: isClosed ? null : addDays(new Date(), randInt(5, 40)),
+      },
+    });
+  }
+
+  // ── Companies & contacts ─────────────────────────────────────────────
+  const companyClients = clients.filter((c) => c.type === ClientType.COMPANY);
+  const contactTitles = ["Managing Director", "General Counsel", "VP Finance", "Company Secretary", "Head of Operations", "CFO"];
+  for (const client of companyClients.slice(0, 10)) {
+    const company = await prisma.company.create({
+      data: {
+        name: client.companyName ?? client.name,
+        industry: client.industry,
+        website: `www.${(client.companyName ?? client.name).toLowerCase().replace(/[^a-z]+/g, "").slice(0, 14)}.com`,
+        phone: client.phone,
+        email: client.email,
+        addressLine1: client.addressLine1,
+        city: client.city,
+        state: client.state,
+        country: client.country,
+        clientId: client.id,
+      },
+    });
+    const contactCount = randInt(1, 3);
+    for (let c = 0; c < contactCount; c++) {
+      await prisma.contact.create({
+        data: {
+          name: rand(["Rajesh Kumar", "Anjali Desai", "Vikas Choudhary", "Sunita Rao", "Manoj Pillai", "Kavya Reddy", "Arvind Bhatt"]),
+          title: rand(contactTitles),
+          email: `${rand(["contact", "info", "office"])}@${company.website?.replace("www.", "")}`,
+          phone: `+91 98${randInt(10000000, 99999999)}`,
+          companyId: company.id,
+          clientId: client.id,
+          isPrimary: c === 0,
+        },
+      });
+    }
+  }
+
   // ── Tasks ────────────────────────────────────────────────────────────
   const taskTitles = [
     "Draft first response to opposing counsel", "Review and finalise disclosure schedule",
@@ -467,6 +567,7 @@ async function main() {
         relPath,
         `LEXORA — ${kind.name}\nMatter: ${matter.title}\nClient: ${def.client.name}\nGenerated as seed placeholder content.\n`,
       );
+      const docStatus = rand([DocumentStatus.DRAFT, DocumentStatus.FINAL, DocumentStatus.FINAL, DocumentStatus.SHARED]);
       await prisma.documentFile.create({
         data: {
           name: fileName,
@@ -478,7 +579,8 @@ async function main() {
           storagePath,
           version: 1,
           tags: [def.pa.name, kind.name].join(","),
-          status: rand([DocumentStatus.DRAFT, DocumentStatus.FINAL, DocumentStatus.FINAL, DocumentStatus.SHARED]),
+          status: docStatus,
+          isShared: docStatus === DocumentStatus.SHARED,
           uploadedById: uploader.id,
           createdAt: subDays(now, randInt(0, 60)),
         },
@@ -763,6 +865,24 @@ async function main() {
       },
     });
   }
+  // Guarantee a few communications for the Client Portal demo account (Novatech Solutions)
+  const portalCommDefs = [
+    { type: CommunicationType.EMAIL, subject: "Series C closing timeline confirmed", summary: "Confirmed target closing date and outstanding conditions precedent with the deal team." },
+    { type: CommunicationType.CALL, subject: "Trademark filing status check-in", summary: "Discussed examination report response strategy for the pending trademark applications." },
+    { type: CommunicationType.MEETING, subject: "Quarterly relationship review", summary: "Reviewed open matters, billing, and upcoming priorities for the quarter." },
+  ];
+  for (const c of portalCommDefs) {
+    await prisma.communicationLog.create({
+      data: {
+        clientId: clients[4].id,
+        type: c.type,
+        subject: c.subject,
+        summary: c.summary,
+        occurredAt: subDays(now, randInt(1, 30)),
+        loggedById: rand(fileHandlers).id,
+      },
+    });
+  }
 
   // ── Announcements ────────────────────────────────────────────────────
   await prisma.announcement.createMany({
@@ -777,16 +897,16 @@ async function main() {
   // ── Court list (settings) ───────────────────────────────────────────
   await prisma.courtListEntry.createMany({
     data: [
-      { name: "Supreme Court of India", type: CourtType.SUPREME_COURT, city: "New Delhi", state: "Delhi" },
-      { name: "Bombay High Court", type: CourtType.HIGH_COURT, city: "Mumbai", state: "Maharashtra" },
-      { name: "Delhi High Court", type: CourtType.HIGH_COURT, city: "New Delhi", state: "Delhi" },
-      { name: "Karnataka High Court", type: CourtType.HIGH_COURT, city: "Bengaluru", state: "Karnataka" },
-      { name: "City Civil Court, Mumbai", type: CourtType.DISTRICT_COURT, city: "Mumbai", state: "Maharashtra" },
-      { name: "District Court, Pune", type: CourtType.DISTRICT_COURT, city: "Pune", state: "Maharashtra" },
-      { name: "National Company Law Tribunal, Mumbai", type: CourtType.TRIBUNAL, city: "Mumbai", state: "Maharashtra" },
-      { name: "National Green Tribunal", type: CourtType.TRIBUNAL, city: "New Delhi", state: "Delhi" },
-      { name: "Labour Court, Mumbai", type: CourtType.TRIBUNAL, city: "Mumbai", state: "Maharashtra" },
-      { name: "State Consumer Disputes Redressal Commission", type: CourtType.CONSUMER_FORUM, city: "Mumbai", state: "Maharashtra" },
+      { name: "Supreme Court of India", type: CourtType.SUPREME_COURT, city: "New Delhi", state: "Delhi", caseNumberPattern: "SLP/\\d{4}/\\d{4}" },
+      { name: "Bombay High Court", type: CourtType.HIGH_COURT, city: "Mumbai", state: "Maharashtra", caseNumberPattern: "WP/\\d{3,5}/\\d{4}" },
+      { name: "Delhi High Court", type: CourtType.HIGH_COURT, city: "New Delhi", state: "Delhi", caseNumberPattern: "CS\\(OS\\)/\\d{3}/\\d{4}" },
+      { name: "Karnataka High Court", type: CourtType.HIGH_COURT, city: "Bengaluru", state: "Karnataka", caseNumberPattern: "WP/\\d{4,6}/\\d{4}" },
+      { name: "City Civil Court, Mumbai", type: CourtType.DISTRICT_COURT, city: "Mumbai", state: "Maharashtra", caseNumberPattern: "CS/\\d{3}/\\d{4}" },
+      { name: "District Court, Pune", type: CourtType.DISTRICT_COURT, city: "Pune", state: "Maharashtra", caseNumberPattern: "RCS/\\d{3}/\\d{4}" },
+      { name: "National Company Law Tribunal, Mumbai", type: CourtType.TRIBUNAL, city: "Mumbai", state: "Maharashtra", caseNumberPattern: "CP/\\d{3,4}/\\d{4}" },
+      { name: "National Green Tribunal", type: CourtType.TRIBUNAL, city: "New Delhi", state: "Delhi", caseNumberPattern: "OA/\\d{3}/\\d{4}" },
+      { name: "Labour Court, Mumbai", type: CourtType.TRIBUNAL, city: "Mumbai", state: "Maharashtra", caseNumberPattern: "ID/\\d{3}/\\d{4}" },
+      { name: "State Consumer Disputes Redressal Commission", type: CourtType.CONSUMER_FORUM, city: "Mumbai", state: "Maharashtra", caseNumberPattern: "CC/\\d{3}/\\d{4}" },
     ],
   });
 
@@ -798,6 +918,10 @@ async function main() {
     { title: "Trademark Registration Process in India: A Practical Guide", category: "Intellectual Property", author: ananya },
     { title: "Structuring Employee Stock Option Plans (ESOPs)", category: "Corporate", author: kavita },
     { title: "GST Notices: Common Grounds and Response Strategy", category: "Tax", author: karan },
+    { title: "Vodafone International Holdings v. Union of India — Case Brief", category: "Case Law", author: ishaan },
+    { title: "Precedent Digest: Wrongful Termination & Notice Pay Disputes", category: "Case Law", author: ishaan },
+    { title: "NGT Rulings on Industrial Emissions — 2023–2025 Summary", category: "Case Law", author: ishaan },
+    { title: "Recent Supreme Court Rulings on Arbitration Clause Enforceability", category: "Case Law", author: ishaan },
   ];
   await Promise.all(
     knowledgeDefs.map((k) =>
@@ -843,12 +967,104 @@ async function main() {
     });
   }
 
+  // ── Notifications ────────────────────────────────────────────────────
+  const notifTemplates: { type: NotificationType; title: (m: (typeof matters)[number]) => string }[] = [
+    { type: NotificationType.HEARING, title: (m) => `Hearing scheduled for ${m.title}` },
+    { type: NotificationType.DEADLINE, title: (m) => `Task deadline approaching on ${m.title}` },
+    { type: NotificationType.TASK_ASSIGNED, title: (m) => `You were assigned a task on ${m.title}` },
+    { type: NotificationType.INVOICE, title: (m) => `Invoice generated for ${m.title}` },
+    { type: NotificationType.DOCUMENT, title: (m) => `New document uploaded to ${m.title}` },
+  ];
+  let notifCount = 0;
+  for (const user of [...attorneys, ...fileHandlers, rahul, fatima]) {
+    const notifsForUser = randInt(2, 5);
+    for (let n = 0; n < notifsForUser; n++) {
+      const matter = rand(matters);
+      const template = rand(notifTemplates);
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: template.type,
+          title: template.title(matter),
+          matterId: matter.id,
+          read: Math.random() > 0.4,
+          createdAt: subDays(now, randInt(0, 10)),
+        },
+      });
+      notifCount++;
+    }
+  }
+
+  // ── Leaves & attendance (HR) ─────────────────────────────────────────
+  const allStaff = [...attorneys, ...fileHandlers, neha, rahul, fatima, ritu, vivek].filter(
+    (u, i, arr) => arr.findIndex((x) => x.id === u.id) === i,
+  );
+  const leaveReasons: Record<LeaveType, string> = {
+    [LeaveType.CASUAL]: "Personal work",
+    [LeaveType.SICK]: "Not keeping well",
+    [LeaveType.EARNED]: "Family vacation",
+    [LeaveType.UNPAID]: "Extended personal leave",
+  };
+  const leaveTypes = [LeaveType.CASUAL, LeaveType.SICK, LeaveType.EARNED];
+  for (const user of allStaff) {
+    const leaveCount = randInt(1, 3);
+    for (let l = 0; l < leaveCount; l++) {
+      const type = rand(leaveTypes);
+      const startOffset = randInt(-60, 20);
+      const start = addDays(now, startOffset);
+      const days = type === LeaveType.EARNED ? randInt(2, 5) : randInt(1, 2);
+      const end = addDays(start, days - 1);
+      const status = startOffset < 0 ? rand([LeaveStatus.APPROVED, LeaveStatus.APPROVED, LeaveStatus.REJECTED]) : LeaveStatus.PENDING;
+      await prisma.leaveRequest.create({
+        data: {
+          userId: user.id,
+          type,
+          startDate: start,
+          endDate: end,
+          days,
+          reason: leaveReasons[type],
+          status,
+          approvedById: status !== LeaveStatus.PENDING ? fatima.id : null,
+          createdAt: subDays(start, randInt(2, 7)),
+        },
+      });
+    }
+  }
+
+  const attendanceStatuses = [
+    AttendanceStatus.PRESENT, AttendanceStatus.PRESENT, AttendanceStatus.PRESENT, AttendanceStatus.PRESENT,
+    AttendanceStatus.WORK_FROM_HOME, AttendanceStatus.HALF_DAY, AttendanceStatus.ABSENT,
+  ];
+  for (const user of allStaff) {
+    for (let d = 0; d < 15; d++) {
+      const date = subDays(now, d);
+      if (date.getDay() === 0 || date.getDay() === 6) continue; // skip weekends
+      const status = rand(attendanceStatuses);
+      await prisma.attendanceRecord.create({
+        data: {
+          userId: user.id,
+          date,
+          status,
+          checkIn: status === AttendanceStatus.PRESENT || status === AttendanceStatus.HALF_DAY
+            ? new Date(new Date(date).setHours(randInt(9, 10), randInt(0, 59)))
+            : null,
+          checkOut: status === AttendanceStatus.PRESENT || status === AttendanceStatus.HALF_DAY
+            ? new Date(new Date(date).setHours(randInt(18, 20), randInt(0, 59)))
+            : null,
+        },
+      });
+    }
+  }
+
   console.log("Seed complete:");
   console.log(`  Firm: ${firm.name}`);
   console.log(`  Offices: 3, Practice areas: ${practiceAreas.length}, Users: ${users.length}`);
   console.log(`  Clients: ${clients.length}, Matters: ${matters.length}`);
   console.log(`  Hearings: ${hearingCount}, Tasks: ${taskCount}, Documents: ${docCount}`);
   console.log(`  Invoices: ${invoices.length}, Templates: ${templateDefs.length}, Clauses: ${clauseDefs.length}`);
+  console.log(`  Companies: ${companyClients.slice(0, 10).length}, Notifications: ${notifCount}`);
+  console.log(`  Client Portal demo: ${clientPortalUser.email}`);
+  console.log(`\nDemo login — any seeded email above, password: ${DEMO_PASSWORD}`);
 }
 
 main()

@@ -9,7 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { clientColumns } from "@/features/clients/columns";
 import type { ClientListItem } from "@/features/clients/queries";
 
-export function ClientsTable({ clients }: { clients: ClientListItem[] }) {
+export function ClientsTable({
+  clients,
+  basePath = "/managing-partner",
+}: {
+  clients: ClientListItem[];
+  basePath?: string;
+}) {
   const router = useRouter();
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState<string>("ALL");
@@ -52,7 +58,7 @@ export function ClientsTable({ clients }: { clients: ClientListItem[] }) {
         emptyIcon={Users}
         emptyTitle="No clients found"
         emptyDescription="Try adjusting your search or filters, or add a new client."
-        onRowClick={(client) => router.push(`/managing-partner/clients/${client.id}`)}
+        onRowClick={(client) => router.push(`${basePath}/clients/${client.id}`)}
       />
     </div>
   );

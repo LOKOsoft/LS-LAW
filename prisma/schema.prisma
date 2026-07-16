@@ -17,11 +17,16 @@ datasource db {
 enum Role {
   MANAGING_PARTNER
   SENIOR_PARTNER
+  PARTNER
   ASSOCIATE
+  JUNIOR_ASSOCIATE
+  LEGAL_RESEARCHER
   PARALEGAL
   RECEPTION
   ACCOUNTS
   HR
+  OFFICE_MANAGER
+  ADMINISTRATOR
   CLIENT
 }
 
@@ -165,6 +170,47 @@ enum CourtType {
   ARBITRATION
 }
 
+enum CaseStage {
+  FILING
+  PRE_TRIAL
+  TRIAL
+  ARGUMENTS
+  JUDGMENT_RESERVED
+  DISPOSED
+  APPEAL
+}
+
+enum NotificationType {
+  DEADLINE
+  HEARING
+  TASK_ASSIGNED
+  INVOICE
+  DOCUMENT
+  MENTION
+  SYSTEM
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  EARNED
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  WORK_FROM_HOME
+  ON_LEAVE
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Firm / org structure
 // ─────────────────────────────────────────────────────────────────────────
@@ -230,6 +276,7 @@ model User {
   id               String     @id @default(cuid())
   name             String
   email            String     @unique
+  passwordHash     String
   phone            String?
   role             Role
   title            String?
@@ -240,6 +287,8 @@ model User {
   joinedAt         DateTime   @default(now())
   officeId         String?
   office           Office?    @relation(fields: [officeId], references: [id])
+  clientId         String?
+  portalClient     Client?    @relation("PortalUser", fields: [clientId], references: [id])
 
   matterMemberships   MatterTeamMember[]
   responsibleMatters  Matter[]           @relation("ResponsibleAttorney")
@@ -255,8 +304,23 @@ model User {
   announcements       Announcement[]
   activityLogs        ActivityLog[]
   knowledgeArticles   KnowledgeArticle[]
+  sessions            Session[]
+  notifications       Notification[]
+  leaveRequests       LeaveRequest[]     @relation("LeaveRequester")
+  leaveApprovals      LeaveRequest[]     @relation("LeaveApprover")
+  attendanceRecords   AttendanceRecord[]
 
   createdAt DateTime @default(now())
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -299,6 +363,9 @@ model Client {
   retainers         Retainer[]
   expenses          Expense[]
   activityLogs      ActivityLog[]
+  companies         Company[]
+  contacts          Contact[]
+  portalUsers       User[]             @relation("PortalUser")
 }
 
 model Matter {
@@ -338,6 +405,8 @@ model Matter {
   retainers         Retainer[]
   timeEntries       TimeEntry[]
   activityLogs      ActivityLog[]
+  courtCase         CourtCase?
+  notifications     Notification[]
 }
 
 model MatterTeamMember {
@@ -349,6 +418,39 @@ model MatterTeamMember {
   role     MatterTeamRole @default(SUPPORT)
 
   @@unique([matterId, userId])
+}
+
+model Company {
+  id           String   @id @default(cuid())
+  name         String
+  industry     String?
+  website      String?
+  phone        String?
+  email        String?
+  addressLine1 String?
+  city         String?
+  state        String?
+  country      String?
+  clientId     String?
+  client       Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  contacts Contact[]
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  title     String?
+  email     String?
+  phone     String?
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  isPrimary Boolean  @default(false)
+  notes     String?
+  createdAt DateTime @default(now())
 }
 
 model Hearing {
@@ -365,6 +467,20 @@ model Hearing {
   notes            String?
   nextHearingDate  DateTime?
   createdAt        DateTime      @default(now())
+}
+
+model CourtCase {
+  id              String     @id @default(cuid())
+  matterId        String     @unique
+  matter          Matter     @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  caseNumber      String
+  courtType       CourtType
+  courtName       String
+  filingDate      DateTime?
+  judge           String?
+  stage           CaseStage  @default(FILING)
+  nextHearingDate DateTime?
+  createdAt       DateTime   @default(now())
 }
 
 model Task {
@@ -618,14 +734,16 @@ model Announcement {
 }
 
 model CourtListEntry {
-  id      String    @id @default(cuid())
-  name    String
-  type    CourtType
-  city    String?
-  state   String?
-  address String?
-  phone   String?
-  email   String?
+  id                 String    @id @default(cuid())
+  name               String
+  type               CourtType
+  city               String?
+  state              String?
+  address            String?
+  phone              String?
+  email              String?
+  caseNumberPattern  String?
+  createdAt          DateTime  @default(now())
 }
 
 model KnowledgeArticle {
@@ -653,4 +771,51 @@ model ActivityLog {
   actorId    String
   actor      User     @relation(fields: [actorId], references: [id])
   createdAt  DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Notifications & HR
+// ─────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?
+  matterId  String?
+  matter    Matter?          @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Cascade)
+  type         LeaveType
+  startDate    DateTime
+  endDate      DateTime
+  days         Float
+  reason       String?
+  status       LeaveStatus @default(PENDING)
+  approvedById String?
+  approvedBy   User?       @relation("LeaveApprover", fields: [approvedById], references: [id])
+  createdAt    DateTime    @default(now())
+}
+
+model AttendanceRecord {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  status    AttendanceStatus @default(PRESENT)
+  checkIn   DateTime?
+  checkOut  DateTime?
+  createdAt DateTime         @default(now())
+
+  @@unique([userId, date])
 }

@@ -1,17 +1,31 @@
 import Link from "next/link";
 import { UserPlus, Briefcase, ListChecks, Receipt, Gavel, UploadCloud } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import type { ModuleKey } from "@/lib/constants/nav";
 
-const actions = [
-  { label: "New Client", icon: UserPlus, href: "/managing-partner/clients?new=1" },
-  { label: "New Matter", icon: Briefcase, href: "/managing-partner/matters?new=1" },
-  { label: "New Task", icon: ListChecks, href: "/managing-partner/tasks?new=1" },
-  { label: "New Invoice", icon: Receipt, href: "/managing-partner/billing?new=1" },
-  { label: "Schedule Hearing", icon: Gavel, href: "/managing-partner/hearings?new=1" },
-  { label: "Upload Document", icon: UploadCloud, href: "/managing-partner/documents?new=1" },
+const ALL_ACTIONS: { label: string; icon: typeof UserPlus; key: ModuleKey; path: string }[] = [
+  { label: "New Client", icon: UserPlus, key: "clients", path: "clients?new=1" },
+  { label: "New Matter", icon: Briefcase, key: "matters", path: "matters?new=1" },
+  { label: "New Task", icon: ListChecks, key: "tasks", path: "tasks?new=1" },
+  { label: "New Invoice", icon: Receipt, key: "billing", path: "billing?new=1" },
+  { label: "Schedule Hearing", icon: Gavel, key: "hearings", path: "hearings?new=1" },
+  { label: "Upload Document", icon: UploadCloud, key: "documents", path: "documents?new=1" },
 ];
 
-export function QuickActionsCard() {
+export function QuickActionsCard({
+  basePath = "/managing-partner",
+  allowedKeys = ALL_ACTIONS.map((a) => a.key),
+}: {
+  basePath?: string;
+  allowedKeys?: ModuleKey[];
+}) {
+  const allowed = new Set(allowedKeys);
+  const actions = ALL_ACTIONS.filter((a) => allowed.has(a.key)).map((a) => ({
+    label: a.label,
+    icon: a.icon,
+    href: `${basePath}/${a.path}`,
+  }));
+
   return (
     <Card>
       <CardHeader>

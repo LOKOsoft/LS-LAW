@@ -22,11 +22,13 @@ export function NewMatterForm({
   practiceAreas,
   attorneys,
   defaultOpen = false,
+  basePath = "/managing-partner",
 }: {
   clients: Option[];
   practiceAreas: Option[];
   attorneys: Option[];
   defaultOpen?: boolean;
+  basePath?: string;
 }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -53,7 +55,7 @@ export function NewMatterForm({
       toast.success("Matter created", { description: `${matter.matterNumber} has been opened.` });
       setOpen(false);
       form.reset();
-      router.push(`/managing-partner/matters/${matter.id}`);
+      router.push(`${basePath}/matters/${matter.id}`);
     } catch {
       toast.error("Could not create matter. Please try again.");
     } finally {

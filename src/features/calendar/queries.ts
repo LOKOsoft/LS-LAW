@@ -1,10 +1,25 @@
 import { prisma } from "@/lib/db/prisma";
+import { matterScopeFilter } from "@/features/matters/queries";
 
-export async function getCalendarEvents() {
+export async function getCalendarEvents(options?: { scopeUserId?: string }) {
+  const scopeUserId = options?.scopeUserId;
   const [hearings, meetings, tasks] = await Promise.all([
-    prisma.hearing.findMany({ include: { matter: { select: { title: true } } } }),
-    prisma.meeting.findMany({ include: { client: { select: { name: true } }, matter: { select: { title: true } } } }),
-    prisma.task.findMany({ where: { dueDate: { not: null } }, include: { assignee: { select: { name: true } } } }),
+    prisma.hearing.findMany({
+      where: scopeUserId ? { matter: matterScopeFilter(scopeUserId) } : undefined,
+      include: { matter: { select: { title: true } } },
+    }),
+    prisma.meeting.findMany({
+      where: scopeUserId
+        ? { OR: [{ matter: matterScopeFilter(scopeUserId) }, { client: { relationshipManagerId: scopeUserId } }] }
+        : undefined,
+      include: { client: { select: { name: true } }, matter: { select: { title: true } } },
+    }),
+    prisma.task.findMany({
+      where: scopeUserId
+        ? { dueDate: { not: null }, OR: [{ assigneeId: scopeUserId }, { matter: matterScopeFilter(scopeUserId) }] }
+        : { dueDate: { not: null } },
+      include: { assignee: { select: { name: true } } },
+    }),
   ]);
 
   const events = [

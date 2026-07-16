@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { MatterHeader } from "@/components/matters/matter-header";
 import { MatterDetailTabs } from "@/components/matters/matter-detail-tabs";
 import { getMatterById, getRelatedResearch } from "@/features/matters/queries";
-import { getManagingPartner } from "@/features/firm/queries";
+import { requireUser } from "@/lib/auth/dal";
 
 export default async function MatterDetailPage({ params }: { params: Promise<{ matterId: string }> }) {
   const { matterId } = await params;
@@ -10,7 +10,7 @@ export default async function MatterDetailPage({ params }: { params: Promise<{ m
   if (!matter) notFound();
 
   const [currentUser, research] = await Promise.all([
-    getManagingPartner(),
+    requireUser(),
     getRelatedResearch(matter.practiceArea.name),
   ]);
 

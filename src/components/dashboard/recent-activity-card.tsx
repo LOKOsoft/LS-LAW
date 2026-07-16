@@ -5,12 +5,18 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { formatTimeAgo, initials } from "@/lib/format";
 import type { RecentActivityItem } from "@/features/activity/queries";
 
-export function RecentActivityCard({ items }: { items: RecentActivityItem[] }) {
+export function RecentActivityCard({
+  items,
+  description = "Latest actions across the firm",
+}: {
+  items: RecentActivityItem[];
+  description?: string;
+}) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Recent activity</CardTitle>
-        <CardDescription>Latest actions across the firm</CardDescription>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (

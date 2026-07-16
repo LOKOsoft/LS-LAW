@@ -8,14 +8,20 @@ const barTone: Record<string, string> = {
   Done: "bg-success",
 };
 
-export function TaskOverviewCard({ data }: { data: { status: string; count: number }[] }) {
+export function TaskOverviewCard({
+  data,
+  description = "Firm-wide task board status",
+}: {
+  data: { status: string; count: number }[];
+  description?: string;
+}) {
   const total = Math.max(1, data.reduce((sum, d) => sum + d.count, 0));
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Task overview</CardTitle>
-        <CardDescription>Firm-wide task board status</CardDescription>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {data.map((d) => (

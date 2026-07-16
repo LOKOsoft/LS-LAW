@@ -4,11 +4,11 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 import { TaskStatus } from "@/generated/prisma/client";
 import { createTaskSchema, type CreateTaskInput } from "@/features/tasks/schema";
-import { getManagingPartner } from "@/features/firm/queries";
+import { requireUser } from "@/lib/auth/dal";
 
 export async function createTask(input: CreateTaskInput) {
   const data = createTaskSchema.parse(input);
-  const creator = await getManagingPartner();
+  const creator = await requireUser();
 
   const task = await prisma.task.create({
     data: {
@@ -22,8 +22,7 @@ export async function createTask(input: CreateTaskInput) {
     },
   });
 
-  revalidatePath("/managing-partner/tasks");
-  revalidatePath("/managing-partner");
+  revalidatePath("/", "layout");
   return task;
 }
 
@@ -32,6 +31,5 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus) {
     where: { id: taskId },
     data: { status, completedAt: status === TaskStatus.DONE ? new Date() : null },
   });
-  revalidatePath("/managing-partner/tasks");
-  revalidatePath("/managing-partner");
+  revalidatePath("/", "layout");
 }

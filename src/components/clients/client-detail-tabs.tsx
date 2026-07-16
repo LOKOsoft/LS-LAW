@@ -12,7 +12,15 @@ import type { ClientDetail } from "@/features/clients/queries";
 
 const communicationIcon = { EMAIL: Mail, CALL: Phone, MEETING: Users, LETTER: FileSignature, SMS: MessageCircle } as const;
 
-export function ClientDetailTabs({ client, currentUserId }: { client: ClientDetail; currentUserId: string }) {
+export function ClientDetailTabs({
+  client,
+  currentUserId,
+  basePath = "/managing-partner",
+}: {
+  client: ClientDetail;
+  currentUserId: string;
+  basePath?: string;
+}) {
   return (
     <Tabs defaultValue="overview" className="gap-4">
       <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-transparent p-0">
@@ -64,7 +72,7 @@ export function ClientDetailTabs({ client, currentUserId }: { client: ClientDeta
             {client.matters.map((matter) => (
               <Link
                 key={matter.id}
-                href={`/managing-partner/matters/${matter.id}`}
+                href={`${basePath}/matters/${matter.id}`}
                 className="flex items-center justify-between rounded-lg border border-border/70 px-4 py-3 transition-colors hover:bg-muted/40"
               >
                 <div className="min-w-0">

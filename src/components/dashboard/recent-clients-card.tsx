@@ -16,7 +16,13 @@ type RecentClient = {
   type: string;
 };
 
-export function RecentClientsCard({ clients }: { clients: RecentClient[] }) {
+export function RecentClientsCard({
+  clients,
+  basePath = "/managing-partner",
+}: {
+  clients: RecentClient[];
+  basePath?: string;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -31,7 +37,7 @@ export function RecentClientsCard({ clients }: { clients: RecentClient[] }) {
             {clients.map((client) => (
               <Link
                 key={client.id}
-                href={`/managing-partner/clients/${client.id}`}
+                href={`${basePath}/clients/${client.id}`}
                 className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/50"
               >
                 <Avatar className="size-9">

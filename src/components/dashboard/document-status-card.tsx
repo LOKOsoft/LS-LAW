@@ -18,9 +18,11 @@ type RecentUpload = {
 export function DocumentStatusCard({
   breakdown,
   recentUploads,
+  basePath = "/managing-partner",
 }: {
   breakdown: { status: string; count: number }[];
   recentUploads: RecentUpload[];
+  basePath?: string;
 }) {
   const total = Math.max(1, breakdown.reduce((sum, b) => sum + b.count, 0));
 
@@ -47,7 +49,7 @@ export function DocumentStatusCard({
           {recentUploads.map((doc) => (
             <Link
               key={doc.id}
-              href="/managing-partner/documents"
+              href={`${basePath}/documents`}
               className="flex items-center gap-3 rounded-lg px-1.5 py-2 transition-colors hover:bg-muted/50"
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">

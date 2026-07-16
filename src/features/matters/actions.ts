@@ -42,7 +42,6 @@ export async function createMatter(input: CreateMatterInput) {
     },
   });
 
-  revalidatePath("/managing-partner/matters");
-  revalidatePath("/managing-partner");
+  revalidatePath("/", "layout");
   return matter;
 }

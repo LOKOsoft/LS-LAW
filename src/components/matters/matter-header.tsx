@@ -4,7 +4,7 @@ import { MatterStatusPill, PriorityPill } from "@/components/shared/status-pill"
 import { formatCurrencyCompact, formatDate } from "@/lib/format";
 import type { MatterDetail } from "@/features/matters/queries";
 
-export function MatterHeader({ matter }: { matter: MatterDetail }) {
+export function MatterHeader({ matter, basePath = "/managing-partner" }: { matter: MatterDetail; basePath?: string }) {
   const totalBilled = matter.invoices.reduce((sum, inv) => sum + inv.total, 0);
   const openTasks = matter.tasks.filter((t) => t.status !== "DONE").length;
 
@@ -19,7 +19,7 @@ export function MatterHeader({ matter }: { matter: MatterDetail }) {
           </div>
           <p className="text-sm text-muted-foreground">
             {matter.matterNumber} ·{" "}
-            <Link href={`/managing-partner/clients/${matter.client.id}`} className="underline-offset-2 hover:underline">
+            <Link href={`${basePath}/clients/${matter.client.id}`} className="underline-offset-2 hover:underline">
               {matter.client.name}
             </Link>{" "}
             ·{" "}

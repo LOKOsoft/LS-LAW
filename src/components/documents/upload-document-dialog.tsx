@@ -15,30 +15,40 @@ type MatterOption = { id: string; title: string; matterNumber: string };
 
 export function UploadDocumentDialog({ matters, defaultOpen = false }: { matters: MatterOption[]; defaultOpen?: boolean }) {
   const [open, setOpen] = React.useState(defaultOpen);
-  const [file, setFile] = React.useState<File | null>(null);
+  const [files, setFiles] = React.useState<File[]>([]);
   const [matterId, setMatterId] = React.useState<string>("");
   const [tags, setTags] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const router = useRouter();
 
   async function handleUpload() {
-    if (!file) {
-      toast.error("Choose a file to upload");
+    if (files.length === 0) {
+      toast.error("Choose one or more files to upload");
       return;
     }
     setIsSubmitting(true);
+    let succeeded = 0;
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      if (matterId) formData.append("matterId", matterId);
-      if (tags) formData.append("tags", tags);
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+        if (matterId) formData.append("matterId", matterId);
+        if (tags) formData.append("tags", tags);
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        if (res.ok) succeeded++;
+      }
 
-      toast.success("Document uploaded", { description: `${file.name} saved to the document vault.` });
+      if (succeeded === files.length) {
+        toast.success(
+          files.length === 1 ? "Document uploaded" : `${succeeded} documents uploaded`,
+          { description: files.length === 1 ? `${files[0].name} saved to the document vault.` : "All files saved to the document vault." },
+        );
+      } else {
+        toast.error(`${succeeded} of ${files.length} files uploaded — some failed.`);
+      }
       setOpen(false);
-      setFile(null);
+      setFiles([]);
       setTags("");
       router.refresh();
     } catch {
@@ -66,16 +76,31 @@ export function UploadDocumentDialog({ matters, defaultOpen = false }: { matters
             Cancel
           </Button>
           <Button onClick={handleUpload} disabled={isSubmitting}>
-            {isSubmitting ? "Uploading..." : "Upload document"}
+            {isSubmitting
+              ? "Uploading..."
+              : files.length > 1
+                ? `Upload ${files.length} documents`
+                : "Upload document"}
           </Button>
         </>
       }
     >
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="upload-file">File</Label>
-          <Input id="upload-file" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} multiple={false} />
-          <p className="text-xs text-muted-foreground">Bulk upload: select multiple files coming soon — one file at a time for now.</p>
+          <Label htmlFor="upload-file">Files</Label>
+          <Input
+            id="upload-file"
+            type="file"
+            multiple
+            onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files) : [])}
+          />
+          {files.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {files.length} file{files.length > 1 ? "s" : ""} selected: {files.map((f) => f.name).join(", ")}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Select one or more files to upload together.</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="upload-matter">Matter (optional)</Label>

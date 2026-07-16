@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,26 +29,37 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { GlobalSearch } from "@/components/shared/global-search";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { formatTimeAgo, initials } from "@/lib/format";
-import { roleRoutes } from "@/lib/constants/nav";
-import type { RecentActivityItem } from "@/features/activity/queries";
+import { logout } from "@/features/auth/actions";
+import { markNotificationRead, markAllNotificationsRead } from "@/features/notifications/actions";
+import type { ModuleKey } from "@/lib/constants/nav";
+import type { NotificationItem } from "@/features/notifications/queries";
 
 type TopbarProps = {
   firmName: string;
   userName: string;
   userTitle: string;
-  notifications: RecentActivityItem[];
+  notifications: NotificationItem[];
+  unreadCount: number;
+  basePath: string;
+  allowedKeys: ModuleKey[];
 };
 
-const quickActions = [
-  { label: "New Matter", icon: Briefcase, href: "/managing-partner/matters?new=1" },
-  { label: "New Client", icon: UserPlus, href: "/managing-partner/clients?new=1" },
-  { label: "New Task", icon: ListChecks, href: "/managing-partner/tasks?new=1" },
-  { label: "New Invoice", icon: Receipt, href: "/managing-partner/billing?new=1" },
-  { label: "Schedule Hearing", icon: Gavel, href: "/managing-partner/hearings?new=1" },
-  { label: "Upload Document", icon: UploadCloud, href: "/managing-partner/documents?new=1" },
+const ALL_QUICK_ACTIONS: { label: string; icon: typeof Briefcase; key: ModuleKey; path: string }[] = [
+  { label: "New Matter", icon: Briefcase, key: "matters", path: "matters?new=1" },
+  { label: "New Client", icon: UserPlus, key: "clients", path: "clients?new=1" },
+  { label: "New Task", icon: ListChecks, key: "tasks", path: "tasks?new=1" },
+  { label: "New Invoice", icon: Receipt, key: "billing", path: "billing?new=1" },
+  { label: "Schedule Hearing", icon: Gavel, key: "hearings", path: "hearings?new=1" },
+  { label: "Upload Document", icon: UploadCloud, key: "documents", path: "documents?new=1" },
 ];
 
-export function Topbar({ firmName, userName, userTitle, notifications }: TopbarProps) {
+export function Topbar({ firmName, userName, userTitle, notifications, unreadCount, basePath, allowedKeys }: TopbarProps) {
+  const allowed = new Set(allowedKeys);
+  const quickActions = ALL_QUICK_ACTIONS.filter((action) => allowed.has(action.key)).map((action) => ({
+    label: action.label,
+    icon: action.icon,
+    href: `${basePath}/${action.path}`,
+  }));
   const today = new Date();
   const dateLabel = today.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
@@ -61,7 +71,7 @@ export function Topbar({ firmName, userName, userTitle, notifications }: TopbarP
       </div>
 
       <div className="flex flex-1 justify-center lg:justify-start lg:pl-6">
-        <GlobalSearch />
+        <GlobalSearch basePath={basePath} allowedKeys={allowedKeys} />
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
@@ -97,37 +107,53 @@ export function Topbar({ firmName, userName, userTitle, notifications }: TopbarP
           <PopoverTrigger asChild>
             <Button size="icon" variant="outline" className="relative">
               <Bell className="size-4" />
-              {notifications.length > 0 ? (
+              {unreadCount > 0 ? (
                 <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">
-                  {notifications.length > 9 ? "9+" : notifications.length}
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               ) : null}
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-80 p-0">
-            <div className="border-b border-border px-4 py-3">
-              <p className="text-sm font-medium">Notifications</p>
-              <p className="text-xs text-muted-foreground">Recent activity across the firm</p>
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div>
+                <p className="text-sm font-medium">Notifications</p>
+                <p className="text-xs text-muted-foreground">{unreadCount} unread</p>
+              </div>
+              {unreadCount > 0 ? (
+                <form action={markAllNotificationsRead}>
+                  <button type="submit" className="text-xs font-medium text-primary hover:underline">
+                    Mark all read
+                  </button>
+                </form>
+              ) : null}
             </div>
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <p className="px-4 py-6 text-center text-sm text-muted-foreground">No recent activity yet.</p>
+                <p className="px-4 py-6 text-center text-sm text-muted-foreground">You&apos;re all caught up.</p>
               ) : (
                 notifications.map((n) => (
-                  <div key={n.id} className="flex gap-3 border-b border-border/60 px-4 py-3 last:border-0 hover:bg-muted/40">
-                    <Avatar className="size-8">
-                      <AvatarFallback className="text-[11px]">{initials(n.actor.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="text-sm leading-snug">
-                        <span className="font-medium">{n.actor.name}</span> {n.action}{" "}
-                        <span className="font-medium">{n.matter?.title ?? n.client?.name ?? ""}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">{formatTimeAgo(n.createdAt)}</p>
-                    </div>
-                  </div>
+                  <form key={n.id} action={markNotificationRead.bind(null, n.id)}>
+                    <button
+                      type="submit"
+                      className="flex w-full items-start gap-3 border-b border-border/60 px-4 py-3 text-left last:border-0 hover:bg-muted/40"
+                    >
+                      <span className={`mt-1.5 size-1.5 shrink-0 rounded-full ${n.read ? "bg-transparent" : "bg-primary"}`} />
+                      <div className="min-w-0 space-y-0.5">
+                        <p className={`text-sm leading-snug ${n.read ? "text-muted-foreground" : "font-medium text-foreground"}`}>
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{formatTimeAgo(n.createdAt)}</p>
+                      </div>
+                    </button>
+                  </form>
                 ))
               )}
+            </div>
+            <div className="border-t border-border px-4 py-2">
+              <Link href={`${basePath}/notifications`} className="text-xs font-medium text-primary hover:underline">
+                View all notifications
+              </Link>
             </div>
           </PopoverContent>
         </Popover>
@@ -149,22 +175,14 @@ export function Topbar({ firmName, userName, userTitle, notifications }: TopbarP
             <DropdownMenuLabel>Signed in as</DropdownMenuLabel>
             <div className="px-2 pb-2 text-sm font-medium">{userName}</div>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="flex items-center justify-between">
-              Switch role view
-              <Badge variant="secondary" className="font-normal">Phase 1</Badge>
-            </DropdownMenuLabel>
-            <DropdownMenuGroup>
-              {roleRoutes.map((role) => (
-                <DropdownMenuItem key={role.href} asChild>
-                  <Link href={role.href}>{role.label}</Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
-              <LogOut className="size-4" />
-              Sign out (not enabled)
-            </DropdownMenuItem>
+            <form action={logout}>
+              <DropdownMenuItem asChild>
+                <button type="submit" className="w-full">
+                  <LogOut className="size-4" />
+                  Sign out
+                </button>
+              </DropdownMenuItem>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -18,7 +18,6 @@ export async function createHearing(input: CreateHearingInput) {
     },
   });
 
-  revalidatePath("/managing-partner/hearings");
-  revalidatePath("/managing-partner");
+  revalidatePath("/", "layout");
   return hearing;
 }

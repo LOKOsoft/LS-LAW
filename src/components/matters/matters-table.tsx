@@ -9,7 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { matterColumns } from "@/features/matters/columns";
 import type { MatterListItem } from "@/features/matters/queries";
 
-export function MattersTable({ matters }: { matters: MatterListItem[] }) {
+export function MattersTable({
+  matters,
+  basePath = "/managing-partner",
+}: {
+  matters: MatterListItem[];
+  basePath?: string;
+}) {
   const router = useRouter();
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState("ALL");
@@ -54,7 +60,7 @@ export function MattersTable({ matters }: { matters: MatterListItem[] }) {
         emptyIcon={Briefcase}
         emptyTitle="No matters found"
         emptyDescription="Try adjusting your search or filters, or open a new matter."
-        onRowClick={(matter) => router.push(`/managing-partner/matters/${matter.id}`)}
+        onRowClick={(matter) => router.push(`${basePath}/matters/${matter.id}`)}
       />
     </div>
   );

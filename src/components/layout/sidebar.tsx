@@ -4,10 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { navSections, MANAGING_PARTNER_BASE } from "@/lib/constants/nav";
+import { buildNavSections, type ModuleKey } from "@/lib/constants/nav";
 
-export function Sidebar() {
+type SidebarProps = {
+  basePath: string;
+  allowedKeys: ModuleKey[];
+  roleLabel: string;
+};
+
+export function Sidebar({ basePath, allowedKeys, roleLabel }: SidebarProps) {
   const pathname = usePathname();
+  const navSections = buildNavSections(basePath, allowedKeys);
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
@@ -29,7 +36,7 @@ export function Sidebar() {
             </p>
             {section.items.map((item) => {
               const isActive =
-                item.href === MANAGING_PARTNER_BASE
+                item.href === basePath
                   ? pathname === item.href
                   : pathname === item.href || pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
@@ -55,8 +62,7 @@ export function Sidebar() {
 
       <div className="border-t border-sidebar-border p-3">
         <div className="rounded-lg bg-sidebar-accent/50 px-3 py-2.5">
-          <p className="text-xs font-medium text-sidebar-foreground">Managing Partner view</p>
-          <p className="text-[11px] text-muted-foreground">Phase 1 — role-based routing, no login required</p>
+          <p className="text-xs font-medium text-sidebar-foreground">{roleLabel} view</p>
         </div>
       </div>
     </aside>

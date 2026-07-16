@@ -30,7 +30,7 @@ export async function getReportsData() {
   const matterStatus = matterStatusGrouped.map((g) => ({ status: g.status.replace(/_/g, " "), count: g._count._all }));
 
   const attorneys = await prisma.user.findMany({
-    where: { role: { in: ["MANAGING_PARTNER", "SENIOR_PARTNER", "ASSOCIATE"] } },
+    where: { role: { in: ["MANAGING_PARTNER", "SENIOR_PARTNER", "PARTNER", "ASSOCIATE", "JUNIOR_ASSOCIATE"] } },
     select: { id: true, name: true },
   });
   const lawyerPerformance = await Promise.all(

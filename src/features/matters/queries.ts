@@ -1,7 +1,27 @@
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 
-export async function getMatters() {
+/** Matches matters where the given user is the responsible attorney or a team member. */
+export function matterScopeFilter(userId: string): Prisma.MatterWhereInput {
+  return { OR: [{ responsibleAttorneyId: userId }, { team: { some: { userId } } }] };
+}
+
+export async function isMatterInScope(matterId: string, scopeUserId: string) {
+  const count = await prisma.matter.count({ where: { id: matterId, ...matterScopeFilter(scopeUserId) } });
+  return count > 0;
+}
+
+export async function getScopedMatterIds(userId: string) {
+  const matters = await prisma.matter.findMany({
+    where: matterScopeFilter(userId),
+    select: { id: true },
+  });
+  return matters.map((m) => m.id);
+}
+
+export async function getMatters(options?: { scopeUserId?: string }) {
   return prisma.matter.findMany({
+    where: options?.scopeUserId ? matterScopeFilter(options.scopeUserId) : undefined,
     orderBy: { openedDate: "desc" },
     include: {
       client: { select: { id: true, name: true } },
@@ -51,7 +71,7 @@ export async function getMatterFormOptions() {
     prisma.client.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.practiceArea.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.user.findMany({
-      where: { role: { in: ["MANAGING_PARTNER", "SENIOR_PARTNER", "ASSOCIATE"] } },
+      where: { role: { in: ["MANAGING_PARTNER", "SENIOR_PARTNER", "PARTNER", "ASSOCIATE", "JUNIOR_ASSOCIATE"] } },
       select: { id: true, name: true, title: true },
       orderBy: { name: "asc" },
     }),

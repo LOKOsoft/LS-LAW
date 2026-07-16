@@ -2,19 +2,23 @@
 
 LEXORA is a zero-cost, fully local practice-management platform for law firms —
 matters, clients, billing, documents, and firm operations in one place. No paid
-services, no cloud dependency, no login required in this phase.
+services, no cloud dependency.
 
-**Phase 1 scope:** the Managing Partner role only. Every role has its own URL
-(`/managing-partner`, `/senior-partner`, `/associate`, `/paralegal`,
-`/reception`, `/accounts`, `/hr`, `/client`) with no authentication — the
-architecture is ready for auth to be added later without restructuring routes.
+**Version 1.0 scope:** real authentication and every persona in the PRD is
+fully built — Managing Partner, Senior Partner, Partner, Associate, Junior
+Associate, Legal Researcher, Paralegal, Reception, Accounts, HR, Office
+Manager, and Administrator each get a role-appropriate dashboard and module
+set, plus a separate branded Client Portal. Companies/Contacts, Court Cases,
+Meetings/Notes/Research, Notifications, Audit Logs, and Attendance/Leaves are
+all real modules now, not tabs or placeholders.
 
 ## Tech stack
 
 Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 (Radix primitives) · Prisma 7 + `better-sqlite3` driver adapter · SQLite ·
 React Hook Form + Zod · TanStack Table / Query · Recharts · Framer Motion ·
-local file storage under `/storage`.
+local file storage under `/storage`. Auth is hand-rolled (no external
+provider): `crypto.scrypt` password hashing + DB-backed sessions.
 
 ## Getting started
 
@@ -25,8 +29,28 @@ npm run db:seed              # seeds realistic demo data (firm, clients, matters
 npm run dev                  # starts the dev server at http://localhost:3000
 ```
 
-The root URL redirects to `/managing-partner`, which is the fully built
-dashboard for this phase.
+The root URL redirects to `/login`. Sign in with any seeded user's email and
+the shared demo password below — you'll land on that user's role home.
+
+### Demo credentials
+
+All seeded users share one password: **`Lexora@123`**
+
+| Role | Email |
+|---|---|
+| Managing Partner | `arjun.mehta@lexoralaw.com` |
+| Senior Partner | `kavita.rao@lexoralaw.com` / `rohan.deshpande@lexoralaw.com` |
+| Partner | `meera.kapoor@lexoralaw.com` |
+| Associate | `ananya.iyer@lexoralaw.com` |
+| Junior Associate | `aditya.rao@lexoralaw.com` |
+| Legal Researcher | `ishaan.kulkarni@lexoralaw.com` |
+| Paralegal | `sameer.khan@lexoralaw.com` |
+| Reception | `neha.sharma@lexoralaw.com` |
+| Accounts | `rahul.verma@lexoralaw.com` |
+| HR | `fatima.sheikh@lexoralaw.com` |
+| Office Manager | `ritu.chawla@lexoralaw.com` |
+| Administrator | `vivek.anand@lexoralaw.com` |
+| Client Portal | `portal@novatechsolutions.com` |
 
 ### Other useful scripts
 
@@ -50,17 +74,35 @@ npm run build         # production build
 
 ## Architecture notes
 
-- **No auth, by design (for now).** Role routing is purely path-based. Adding
-  real authentication later means introducing a session/identity layer and
-  gating these existing routes — no rework of the page structure required.
+- **Auth**: `src/lib/auth/session.ts` creates a DB-backed `Session` row and
+  sets an httpOnly cookie holding only the session id. `src/proxy.ts` (this
+  Next.js version renamed `middleware.ts` → `proxy.ts`) does a cheap,
+  cookie-presence-only redirect to `/login`. The real, DB-backed check —
+  including the role-match redirect — happens in `requireUser()`
+  (`src/lib/auth/dal.ts`), called from every role's `layout.tsx`.
 - **Server Components read, Server Actions write.** Pages fetch data directly
-  via a Prisma singleton (`src/lib/db/prisma.ts`); mutations (creating a
-  client, matter, task, hearing, invoice, note, or toggling a favorite) go
-  through colocated `"use server"` actions under `src/features/<module>/actions.ts`,
-  validated with Zod schemas shared with the client-side forms.
+  via a Prisma singleton (`src/lib/db/prisma.ts`); mutations go through
+  colocated `"use server"` actions under `src/features/<module>/actions.ts`,
+  validated with Zod schemas shared with the client-side forms. Every mutating
+  action calls `revalidatePath("/", "layout")` so it refreshes correctly
+  regardless of which role route the user is on.
 - **One shared `DataTable`** (`src/components/shared/data-table`) wrapping
   TanStack Table backs every module's list view — column defs and data are the
   only per-module code.
 - **Feature-based structure**: `src/features/<module>/{queries,actions,schema,columns}.ts`
   colocated with `src/components/<module>/*` presentational components and
-  `src/app/(roles)/managing-partner/<module>/page.tsx` routes.
+  `src/app/(roles)/<role>/<module>/page.tsx` routes, one route tree per role.
+- **Role scoping**: query functions take an optional `{ scopeUserId }` — when
+  provided, results are filtered to matters the user leads or is a team member
+  on (`matterScopeFilter` in `src/features/matters/queries.ts`). Managing
+  Partner/Accounts/HR/Office Manager/Administrator call unscoped for firm-wide
+  visibility; the fee-earner roles (Senior Partner, Partner, Associate, Junior
+  Associate, Legal Researcher, Paralegal) call scoped.
+- **Nav is data-driven**: `src/lib/constants/nav.ts` defines every module once
+  with an icon/path/description, and a per-role `ModuleKey[]` allow-list
+  (derived from the PRD's §5.4 permission matrix) determines each role's
+  sidebar, quick actions, and command palette — not separate hardcoded nav
+  trees per role.
+- **Client Portal** (`/client`) is a separate, minimal-chrome shell (no
+  sidebar) gated by `requirePortalUser()`, scoped to exactly one `Client`
+  record via `User.clientId`.

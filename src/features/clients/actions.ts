@@ -37,8 +37,7 @@ export async function createClient(input: CreateClientInput) {
     },
   });
 
-  revalidatePath("/managing-partner/clients");
-  revalidatePath("/managing-partner");
+  revalidatePath("/", "layout");
   return client;
 }
 
@@ -53,7 +52,6 @@ export async function createNote(input: CreateNoteInput) {
     },
   });
 
-  if (data.clientId) revalidatePath(`/managing-partner/clients/${data.clientId}`);
-  if (data.matterId) revalidatePath(`/managing-partner/matters/${data.matterId}`);
+  revalidatePath("/", "layout");
   return note;
 }
