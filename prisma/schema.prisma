@@ -1,0 +1,656 @@
+// LEXORA — practice management data model.
+// Local-only SQLite datasource; no external services.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  MANAGING_PARTNER
+  SENIOR_PARTNER
+  ASSOCIATE
+  PARALEGAL
+  RECEPTION
+  ACCOUNTS
+  HR
+  CLIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ClientType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+}
+
+enum MatterStatus {
+  INTAKE
+  ACTIVE
+  ON_HOLD
+  CLOSED
+  ARCHIVED
+}
+
+enum BillingType {
+  HOURLY
+  FIXED_FEE
+  CONTINGENCY
+  RETAINER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MatterTeamRole {
+  LEAD
+  ASSOCIATE
+  PARALEGAL
+  SUPPORT
+}
+
+enum HearingStatus {
+  SCHEDULED
+  COMPLETED
+  ADJOURNED
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum DocumentStatus {
+  DRAFT
+  FINAL
+  ARCHIVED
+  SHARED
+}
+
+enum TemplateCategory {
+  EMPLOYMENT
+  CORPORATE
+  LITIGATION
+  PROPERTY
+  TAX
+  COMPLIANCE
+  CONTRACTS
+  NDA
+  AGREEMENT
+  NOTICE
+  AFFIDAVIT
+  POWER_OF_ATTORNEY
+  WILL
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum LineItemType {
+  FEE
+  EXPENSE
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CHEQUE
+  CASH
+  CARD
+  UPI
+}
+
+enum RetainerStatus {
+  ACTIVE
+  DEPLETED
+  CLOSED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum CommunicationType {
+  EMAIL
+  CALL
+  MEETING
+  LETTER
+  SMS
+}
+
+enum AnnouncementPriority {
+  NORMAL
+  IMPORTANT
+  URGENT
+}
+
+enum CourtType {
+  SUPREME_COURT
+  HIGH_COURT
+  DISTRICT_COURT
+  TRIBUNAL
+  CONSUMER_FORUM
+  FAMILY_COURT
+  ARBITRATION
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Firm / org structure
+// ─────────────────────────────────────────────────────────────────────────
+
+model Firm {
+  id                String   @id @default(cuid())
+  name              String
+  legalName         String?
+  tagline           String?
+  logoUrl           String?
+  email             String?
+  phone             String?
+  website           String?
+  addressLine1      String?
+  addressLine2      String?
+  city              String?
+  state             String?
+  country           String?
+  postalCode        String?
+  taxId             String?
+  foundedYear       Int?
+  timezone          String   @default("Asia/Kolkata")
+  currency          String   @default("INR")
+  invoicePrefix     String   @default("INV")
+  invoiceNextNumber Int      @default(1)
+  financialYearStart Int     @default(4)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  offices Office[]
+}
+
+model Office {
+  id           String   @id @default(cuid())
+  firmId       String
+  firm         Firm     @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  name         String
+  isPrimary    Boolean  @default(false)
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  country      String?
+  postalCode   String?
+  phone        String?
+  email        String?
+  createdAt    DateTime @default(now())
+
+  users User[]
+}
+
+model PracticeArea {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  color       String  @default("#6366f1")
+  icon        String?
+
+  matters Matter[]
+}
+
+model User {
+  id               String     @id @default(cuid())
+  name             String
+  email            String     @unique
+  phone            String?
+  role             Role
+  title            String?
+  avatarUrl        String?
+  barNumber        String?
+  status           UserStatus @default(ACTIVE)
+  utilizationTarget Int       @default(75)
+  joinedAt         DateTime   @default(now())
+  officeId         String?
+  office           Office?    @relation(fields: [officeId], references: [id])
+
+  matterMemberships   MatterTeamMember[]
+  responsibleMatters  Matter[]           @relation("ResponsibleAttorney")
+  relationshipClients Client[]           @relation("RelationshipManager")
+  assignedTasks       Task[]             @relation("TaskAssignee")
+  createdTasks        Task[]             @relation("TaskCreator")
+  documentsUploaded   DocumentFile[]
+  documentVersions    DocumentVersion[]
+  notes               Note[]
+  timeEntries         TimeEntry[]
+  expensesSubmitted   Expense[]
+  communicationLogs   CommunicationLog[]
+  announcements       Announcement[]
+  activityLogs        ActivityLog[]
+  knowledgeArticles   KnowledgeArticle[]
+
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Clients & matters
+// ─────────────────────────────────────────────────────────────────────────
+
+model Client {
+  id                   String       @id @default(cuid())
+  clientNumber         String       @unique
+  type                 ClientType   @default(COMPANY)
+  name                 String
+  companyName          String?
+  industry             String?
+  email                String?
+  phone                String?
+  addressLine1         String?
+  addressLine2         String?
+  city                 String?
+  state                String?
+  country              String?
+  postalCode           String?
+  taxId                String?
+  status               ClientStatus @default(ACTIVE)
+  source               String?
+  tags                 String?
+  avatarUrl            String?
+  relationshipManagerId String?
+  relationshipManager  User?        @relation("RelationshipManager", fields: [relationshipManagerId], references: [id])
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  matters           Matter[]
+  invoices          Invoice[]
+  payments          Payment[]
+  documents         DocumentFile[]
+  documentFolders   DocumentFolder[]
+  notes             Note[]
+  meetings          Meeting[]
+  communicationLogs CommunicationLog[]
+  retainers         Retainer[]
+  expenses          Expense[]
+  activityLogs      ActivityLog[]
+}
+
+model Matter {
+  id                    String       @id @default(cuid())
+  matterNumber           String       @unique
+  title                  String
+  description            String?
+  clientId               String
+  client                 Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  practiceAreaId         String
+  practiceArea           PracticeArea @relation(fields: [practiceAreaId], references: [id])
+  status                 MatterStatus @default(INTAKE)
+  priority               Priority     @default(MEDIUM)
+  billingType            BillingType  @default(HOURLY)
+  hourlyRate             Float?
+  estimatedValue         Float?
+  openedDate             DateTime     @default(now())
+  targetCloseDate        DateTime?
+  closedDate             DateTime?
+  opposingParty          String?
+  opposingCounsel        String?
+  responsibleAttorneyId  String
+  responsibleAttorney    User         @relation("ResponsibleAttorney", fields: [responsibleAttorneyId], references: [id])
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+
+  team              MatterTeamMember[]
+  hearings          Hearing[]
+  tasks             Task[]
+  documents         DocumentFile[]
+  documentFolders   DocumentFolder[]
+  notes             Note[]
+  meetings          Meeting[]
+  communicationLogs CommunicationLog[]
+  invoices          Invoice[]
+  expenses          Expense[]
+  retainers         Retainer[]
+  timeEntries       TimeEntry[]
+  activityLogs      ActivityLog[]
+}
+
+model MatterTeamMember {
+  id       String         @id @default(cuid())
+  matterId String
+  matter   Matter         @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User           @relation(fields: [userId], references: [id])
+  role     MatterTeamRole @default(SUPPORT)
+
+  @@unique([matterId, userId])
+}
+
+model Hearing {
+  id               String        @id @default(cuid())
+  matterId         String
+  matter           Matter        @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  courtName        String
+  courtroom        String?
+  judge            String?
+  hearingType      String
+  scheduledAt      DateTime
+  status           HearingStatus @default(SCHEDULED)
+  outcome          String?
+  notes            String?
+  nextHearingDate  DateTime?
+  createdAt        DateTime      @default(now())
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  matterId    String?
+  matter      Matter?    @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  assigneeId  String
+  assignee    User       @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdById String
+  createdBy   User       @relation("TaskCreator", fields: [createdById], references: [id])
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Documents
+// ─────────────────────────────────────────────────────────────────────────
+
+model DocumentFolder {
+  id       String          @id @default(cuid())
+  name     String
+  parentId String?
+  parent   DocumentFolder? @relation("FolderTree", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children DocumentFolder[] @relation("FolderTree")
+  matterId String?
+  matter   Matter?         @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId String?
+  client   Client?         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+
+  documents DocumentFile[]
+}
+
+model DocumentFile {
+  id             String         @id @default(cuid())
+  name           String
+  folderId       String?
+  folder         DocumentFolder? @relation(fields: [folderId], references: [id])
+  matterId       String?
+  matter         Matter?        @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId       String?
+  client         Client?        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  fileType       String
+  sizeBytes      Int            @default(0)
+  storagePath    String
+  version        Int            @default(1)
+  tags           String?
+  status         DocumentStatus @default(DRAFT)
+  isArchived     Boolean        @default(false)
+  isShared       Boolean        @default(false)
+  uploadedById   String
+  uploadedBy     User           @relation(fields: [uploadedById], references: [id])
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  versions DocumentVersion[]
+}
+
+model DocumentVersion {
+  id           String       @id @default(cuid())
+  documentId   String
+  document     DocumentFile @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version      Int
+  storagePath  String
+  note         String?
+  uploadedById String
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime     @default(now())
+}
+
+model Template {
+  id           String           @id @default(cuid())
+  name         String
+  category     TemplateCategory
+  description  String?
+  storagePath  String?
+  isFavorite   Boolean          @default(false)
+  usageCount   Int              @default(0)
+  lastUsedAt   DateTime?
+  createdAt    DateTime         @default(now())
+}
+
+model Clause {
+  id         String   @id @default(cuid())
+  title      String
+  category   String
+  body       String
+  tags       String?
+  isFavorite Boolean  @default(false)
+  usageCount Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Billing & finance
+// ─────────────────────────────────────────────────────────────────────────
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  clientId      String
+  client        Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  matterId      String?
+  matter        Matter?       @relation(fields: [matterId], references: [id])
+  status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime
+  subtotal      Float         @default(0)
+  taxAmount     Float         @default(0)
+  discount      Float         @default(0)
+  total         Float         @default(0)
+  amountPaid    Float         @default(0)
+  currency      String        @default("INR")
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
+}
+
+model InvoiceLineItem {
+  id          String       @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float        @default(1)
+  rate        Float
+  amount      Float
+  type        LineItemType @default(FEE)
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  invoiceId String
+  invoice   Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    Client        @relation(fields: [clientId], references: [id])
+  amount    Float
+  method    PaymentMethod @default(BANK_TRANSFER)
+  reference String?
+  paidAt    DateTime      @default(now())
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  matterId    String?
+  matter      Matter?  @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id])
+  category    String
+  description String
+  amount      Float
+  incurredAt  DateTime @default(now())
+  billable    Boolean  @default(true)
+  reimbursed  Boolean  @default(false)
+  submittedById String
+  submittedBy   User   @relation(fields: [submittedById], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Retainer {
+  id        String         @id @default(cuid())
+  clientId  String
+  client    Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  matterId  String?
+  matter    Matter?        @relation(fields: [matterId], references: [id])
+  amount    Float
+  balance   Float
+  status    RetainerStatus @default(ACTIVE)
+  startDate DateTime       @default(now())
+  createdAt DateTime       @default(now())
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  matterId    String
+  matter      Matter   @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  date        DateTime @default(now())
+  minutes     Int
+  description String
+  billable    Boolean  @default(true)
+  rate        Float?
+  invoiced    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Collaboration
+// ─────────────────────────────────────────────────────────────────────────
+
+model Note {
+  id        String   @id @default(cuid())
+  matterId  String?
+  matter    Matter?  @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Meeting {
+  id              String        @id @default(cuid())
+  matterId        String?
+  matter          Matter?       @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId        String?
+  client          Client?       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title           String
+  scheduledAt     DateTime
+  durationMinutes Int           @default(30)
+  location        String?
+  attendees       String?
+  notes           String?
+  status          MeetingStatus @default(SCHEDULED)
+  createdAt       DateTime      @default(now())
+}
+
+model CommunicationLog {
+  id         String            @id @default(cuid())
+  matterId   String?
+  matter     Matter?           @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId   String?
+  client     Client?           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type       CommunicationType
+  subject    String
+  summary    String?
+  occurredAt DateTime          @default(now())
+  loggedById String
+  loggedBy   User              @relation(fields: [loggedById], references: [id])
+}
+
+model Announcement {
+  id          String               @id @default(cuid())
+  title       String
+  body        String
+  priority    AnnouncementPriority @default(NORMAL)
+  publishedAt DateTime             @default(now())
+  expiresAt   DateTime?
+  createdById String
+  createdBy   User                 @relation(fields: [createdById], references: [id])
+}
+
+model CourtListEntry {
+  id      String    @id @default(cuid())
+  name    String
+  type    CourtType
+  city    String?
+  state   String?
+  address String?
+  phone   String?
+  email   String?
+}
+
+model KnowledgeArticle {
+  id          String   @id @default(cuid())
+  title       String
+  category    String
+  summary     String?
+  body        String
+  tags        String?
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  publishedAt DateTime @default(now())
+  viewCount   Int      @default(0)
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String
+  matterId   String?
+  matter     Matter?  @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId   String?
+  client     Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+  createdAt  DateTime @default(now())
+}
