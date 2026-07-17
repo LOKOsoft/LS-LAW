@@ -39,6 +39,69 @@ A prior session had started deepening the Clients module (new/edit forms split v
 - Verified end-to-end with Playwright against the real dev server + seeded DB: login, list/search/export, full detail-tab sweep, actions menu, archived/duplicates/relationship-manager/import pages, a real create → duplicate-warning → merge round trip, and the accounts read-only gating (no Import/Duplicate-detection links, no Edit button, no Restore button, direct nav to `/accounts/clients/import` 404s as expected).
 - `npx tsc --noEmit`, `npm run lint`, and `npm run build` all clean (one pre-existing React Compiler warning on `new-client-form.tsx`'s `form.watch()`, unrelated to this pass).
 
+## SaaS-readiness pass
+
+A later request asked for the app to be prepared for a future commercial SaaS
+version — auth, multi-tenancy, billing, cloud storage, notifications, AI,
+config, logging, caching, error handling, and security — without implementing
+any of those as real external integrations, and without breaking the "runs
+fully locally, zero external services" constraint.
+
+**Architecture audit first:** re-ran the checks this kind of request implies
+(duplicate components/services, circular dependencies, oversized files, dead
+code, naming) before adding anything. Result: clean. `npx madge --circular`
+found 37 "circular dependencies," all internal to `src/generated/prisma`
+(auto-generated, never hand-edited) — zero in app code. Largest source file
+is 374 lines (`components/ui/chart.tsx`, a shadcn primitive). ESLint/tsc were
+already clean apart from the one documented pre-existing warning. No changes
+were needed or made as a result of the audit itself.
+
+**Added — `src/lib/platform/`:** interface-driven scaffolding for auth/
+permission/session contexts (wraps the real `lib/auth/*`, doesn't replace
+it), multi-tenancy (resolves to the single seeded `Firm` today), billing/
+subscriptions/feature-gating (fully mock — no real product billing existed
+before), storage (wraps the real `lib/storage/local-storage.ts` behind a
+`StorageProvider` interface; cloud adapters are inert), notifications
+(wraps the real in-app `Notification` writer as one channel; email/SMS/
+WhatsApp/push/desktop are console-logging mocks, disabled by default), AI
+(fully mock, deterministic, no network calls), centralized config
+(`lib/platform/config`), a logger (`lib/platform/logging`, operational —
+distinct from the real `ActivityLog` audit trail), an in-memory cache
+(`lib/platform/cache`), and a typed error hierarchy (`lib/platform/errors`).
+See `src/lib/platform/README.md` for the module-by-module rules on what's
+real vs. mock.
+
+**Real, wired-in changes (not just scaffolding):**
+- Security headers + a same-origin CSP via `next.config.ts`'s `headers()`
+  (no nonces — that forces every page into dynamic rendering, a real
+  behavior change this pass didn't want to make).
+- `validateUploadedFile` (size limit, blocked executable extensions) wired
+  into `app/api/upload/route.ts` — there was no upload validation before.
+- An in-memory login rate limiter + security-event logging wired into
+  `features/auth/actions.ts`'s `login()` — there was no brute-force
+  throttling before.
+- `lib/db/prisma.ts`'s DB file path is now overridable via
+  `DATABASE_FILE_PATH` (falls back to the same `prisma/dev.db` as before) —
+  added so integration tests can point at an isolated throwaway database;
+  also generally useful for future deployment configurability.
+- `@next/bundle-analyzer` wired in behind `ANALYZE=true` (`npm run analyze`).
+
+**Added — `tests/` (didn't exist before this pass):** Vitest for unit +
+integration tests, Playwright for e2e/accessibility/performance/visual, with
+one real example per category (not placeholders — all verified passing
+against the real dev server and a real isolated SQLite test database created
+via `prisma db push` against a temp file). See `docs/TESTING.md`.
+
+**Verified:** `npx tsc --noEmit`, `npm run lint`, `npm run test`, and the full
+Playwright suite all pass; `npm run dev` serves `/login` and a real seeded
+login → role-home flow end to end with zero external services configured.
+
+**One environment quirk hit and resolved during verification, not a code
+bug:** a stale Turbopack `.next` cache (see follow-up item 6 below on WSL2's
+DrvFs filesystem-event unreliability) caused `/login` to 404 after rapid
+dev-server restarts during testing; `rm -rf .next` before restarting fixed
+it. Unrelated to any change in this pass.
+
 ## Known follow-up work (not done in this pass, intentionally out of scope)
 
 1. Wire `use-breadcrumbs` into `PageHeader`/role layouts so breadcrumbs actually render (currently only the hook + primitive exist).

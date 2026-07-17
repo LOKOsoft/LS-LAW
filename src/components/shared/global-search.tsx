@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Search, Users, Briefcase, FileText, LayoutDashboard } from "lucide-react";
+import { Search, Users, Briefcase, FileText, LayoutDashboard, Gavel, Receipt, CheckSquare, StickyNote, UserCog, Building2 } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -17,7 +17,17 @@ import { Button } from "@/components/ui/button";
 import { ALL_MODULE_KEYS, buildNavSections, type ModuleKey } from "@/lib/constants/nav";
 import { globalSearch, type GlobalSearchResult } from "@/features/search/actions";
 
-const emptyResults: GlobalSearchResult = { clients: [], matters: [], documents: [] };
+const emptyResults: GlobalSearchResult = {
+  clients: [],
+  matters: [],
+  documents: [],
+  hearings: [],
+  invoices: [],
+  tasks: [],
+  notes: [],
+  employees: [],
+  companies: [],
+};
 
 export function GlobalSearch({
   basePath = "/managing-partner",
@@ -63,8 +73,6 @@ export function GlobalSearch({
     setQuery("");
     action();
   }
-
-  const hasResults = results.clients.length + results.matters.length + results.documents.length > 0;
 
   return (
     <>
@@ -134,7 +142,108 @@ export function GlobalSearch({
                   </CommandGroup>
                 </>
               ) : null}
-              {!hasResults && !isLoading ? null : null}
+              {results.hearings.length > 0 ? (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading="Hearings">
+                    {results.hearings.map((h) => (
+                      <CommandItem key={h.id} onSelect={() => runCommand(() => router.push(`${basePath}/matters/${h.matterId}`))}>
+                        <Gavel className="size-4 text-muted-foreground" />
+                        {h.hearingType} — {h.courtName}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              ) : null}
+              {results.invoices.length > 0 ? (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading="Invoices">
+                    {results.invoices.map((i) => (
+                      <CommandItem
+                        key={i.id}
+                        onSelect={() =>
+                          runCommand(() => router.push(i.matterId ? `${basePath}/matters/${i.matterId}` : `${basePath}/billing`))
+                        }
+                      >
+                        <Receipt className="size-4 text-muted-foreground" />
+                        {i.invoiceNumber}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              ) : null}
+              {results.tasks.length > 0 ? (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading="Tasks">
+                    {results.tasks.map((t) => (
+                      <CommandItem
+                        key={t.id}
+                        onSelect={() =>
+                          runCommand(() => router.push(t.matterId ? `${basePath}/matters/${t.matterId}` : `${basePath}/tasks`))
+                        }
+                      >
+                        <CheckSquare className="size-4 text-muted-foreground" />
+                        {t.title}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              ) : null}
+              {results.notes.length > 0 ? (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading="Notes">
+                    {results.notes.map((n) => (
+                      <CommandItem
+                        key={n.id}
+                        onSelect={() =>
+                          runCommand(() =>
+                            router.push(
+                              n.matterId
+                                ? `${basePath}/matters/${n.matterId}`
+                                : n.clientId
+                                  ? `${basePath}/clients/${n.clientId}`
+                                  : `${basePath}/notes`,
+                            ),
+                          )
+                        }
+                      >
+                        <StickyNote className="size-4 text-muted-foreground" />
+                        {n.body.slice(0, 60)}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              ) : null}
+              {results.employees.length > 0 ? (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading="Employees">
+                    {results.employees.map((e) => (
+                      <CommandItem key={e.id} onSelect={() => runCommand(() => router.push(`${basePath}/hr`))}>
+                        <UserCog className="size-4 text-muted-foreground" />
+                        {e.name}
+                        <CommandShortcut>{e.role.replace(/_/g, " ")}</CommandShortcut>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              ) : null}
+              {results.companies.length > 0 ? (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup heading="Companies">
+                    {results.companies.map((c) => (
+                      <CommandItem key={c.id} onSelect={() => runCommand(() => router.push(`${basePath}/companies`))}>
+                        <Building2 className="size-4 text-muted-foreground" />
+                        {c.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              ) : null}
             </>
           )}
         </CommandList>

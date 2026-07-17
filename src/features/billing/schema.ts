@@ -8,3 +8,12 @@ export const createInvoiceSchema = z.object({
 });
 
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
+
+export const recordPaymentSchema = z.object({
+  amount: z.number().min(1, "Amount must be greater than 0"),
+  method: z.enum(["BANK_TRANSFER", "CHEQUE", "CASH", "CARD", "UPI"]),
+  reference: z.string().optional(),
+  paidAt: z.string().optional(),
+});
+
+export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;

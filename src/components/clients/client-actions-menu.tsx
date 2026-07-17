@@ -43,8 +43,8 @@ export function ClientActionsMenu({
         toast.success("Client archived", { description: `${client.name} moved to Archived Clients.` });
       }
       router.refresh();
-    } catch {
-      toast.error("Could not update client status. Please try again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update client status. Please try again.");
     }
   }
 

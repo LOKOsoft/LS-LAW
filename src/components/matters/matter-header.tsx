@@ -1,10 +1,19 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { MatterStatusPill, PriorityPill } from "@/components/shared/status-pill";
+import { MatterStageControl } from "@/components/matters/matter-stage-control";
 import { formatCurrencyCompact, formatDate } from "@/lib/format";
 import type { MatterDetail } from "@/features/matters/queries";
 
-export function MatterHeader({ matter, basePath = "/managing-partner" }: { matter: MatterDetail; basePath?: string }) {
+export function MatterHeader({
+  matter,
+  basePath = "/managing-partner",
+  currentUserId,
+}: {
+  matter: MatterDetail;
+  basePath?: string;
+  currentUserId: string;
+}) {
   const totalBilled = matter.invoices.reduce((sum, inv) => sum + inv.total, 0);
   const openTasks = matter.tasks.filter((t) => t.status !== "DONE").length;
 
@@ -34,6 +43,8 @@ export function MatterHeader({ matter, basePath = "/managing-partner" }: { matte
           ) : null}
         </div>
       </div>
+
+      <MatterStageControl matter={matter} currentUserId={currentUserId} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card className="py-4">

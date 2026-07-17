@@ -16,6 +16,7 @@ import {
   type ImportClientRow,
 } from "@/features/clients/schema";
 import { findSimilarClients } from "@/features/clients/queries";
+import { assertClientHasNoActiveMatters } from "@/lib/services/validation";
 
 export async function checkSimilarClientNames(name: string) {
   return findSimilarClients(name);
@@ -115,6 +116,7 @@ export async function reassignRelationshipManager(clientId: string, managerId: s
 }
 
 export async function archiveClient(clientId: string, actorId: string) {
+  await assertClientHasNoActiveMatters(clientId);
   const client = await prisma.client.update({ where: { id: clientId }, data: { status: "ARCHIVED" } });
 
   await prisma.activityLog.create({

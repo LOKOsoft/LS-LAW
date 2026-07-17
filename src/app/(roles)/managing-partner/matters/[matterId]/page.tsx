@@ -16,7 +16,7 @@ export default async function MatterDetailPage({ params }: { params: Promise<{ m
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} />
+      <MatterHeader matter={matter} currentUserId={currentUser.id} />
       <MatterDetailTabs matter={matter} currentUserId={currentUser.id} research={research} />
     </div>
   );

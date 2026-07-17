@@ -92,9 +92,37 @@ enum TaskStatus {
 
 enum DocumentStatus {
   DRAFT
+  REVIEW
+  PARTNER_APPROVAL
+  CLIENT_APPROVAL
+  SIGNED
+  FILED
   FINAL
   ARCHIVED
   SHARED
+}
+
+/**
+ * Operational pipeline a matter moves through, from first inquiry to archive. Coarser than MatterStatus.
+ */
+enum MatterStage {
+  INQUIRY
+  CONFLICT_CHECK
+  CONSULTATION
+  MATTER_CREATED
+  DOCUMENT_COLLECTION
+  RESEARCH
+  DRAFTING
+  INTERNAL_REVIEW
+  CLIENT_REVIEW
+  APPROVAL
+  FILING
+  COURT_HEARING
+  ORDER
+  BILLING
+  PAYMENT
+  CLOSURE
+  ARCHIVE
 }
 
 enum TemplateCategory {
@@ -217,29 +245,29 @@ enum AttendanceStatus {
 // ─────────────────────────────────────────────────────────────────────────
 
 model Firm {
-  id                String   @id @default(cuid())
-  name              String
-  legalName         String?
-  tagline           String?
-  logoUrl           String?
-  email             String?
-  phone             String?
-  website           String?
-  addressLine1      String?
-  addressLine2      String?
-  city              String?
-  state             String?
-  country           String?
-  postalCode        String?
-  taxId             String?
-  foundedYear       Int?
-  timezone          String   @default("Asia/Kolkata")
-  currency          String   @default("INR")
-  invoicePrefix     String   @default("INV")
-  invoiceNextNumber Int      @default(1)
-  financialYearStart Int     @default(4)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  name               String
+  legalName          String?
+  tagline            String?
+  logoUrl            String?
+  email              String?
+  phone              String?
+  website            String?
+  addressLine1       String?
+  addressLine2       String?
+  city               String?
+  state              String?
+  country            String?
+  postalCode         String?
+  taxId              String?
+  foundedYear        Int?
+  timezone           String   @default("Asia/Kolkata")
+  currency           String   @default("INR")
+  invoicePrefix      String   @default("INV")
+  invoiceNextNumber  Int      @default(1)
+  financialYearStart Int      @default(4)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   offices Office[]
 }
@@ -274,22 +302,22 @@ model PracticeArea {
 }
 
 model User {
-  id               String     @id @default(cuid())
-  name             String
-  email            String     @unique
-  passwordHash     String
-  phone            String?
-  role             Role
-  title            String?
-  avatarUrl        String?
-  barNumber        String?
-  status           UserStatus @default(ACTIVE)
-  utilizationTarget Int       @default(75)
-  joinedAt         DateTime   @default(now())
-  officeId         String?
-  office           Office?    @relation(fields: [officeId], references: [id])
-  clientId         String?
-  portalClient     Client?    @relation("PortalUser", fields: [clientId], references: [id])
+  id                String     @id @default(cuid())
+  name              String
+  email             String     @unique
+  passwordHash      String
+  phone             String?
+  role              Role
+  title             String?
+  avatarUrl         String?
+  barNumber         String?
+  status            UserStatus @default(ACTIVE)
+  utilizationTarget Int        @default(75)
+  joinedAt          DateTime   @default(now())
+  officeId          String?
+  office            Office?    @relation(fields: [officeId], references: [id])
+  clientId          String?
+  portalClient      Client?    @relation("PortalUser", fields: [clientId], references: [id])
 
   matterMemberships   MatterTeamMember[]
   responsibleMatters  Matter[]           @relation("ResponsibleAttorney")
@@ -297,7 +325,10 @@ model User {
   assignedTasks       Task[]             @relation("TaskAssignee")
   createdTasks        Task[]             @relation("TaskCreator")
   documentsUploaded   DocumentFile[]
+  documentsReviewed   DocumentFile[]     @relation("DocumentReviewer")
+  documentsApproved   DocumentFile[]     @relation("DocumentApprover")
   documentVersions    DocumentVersion[]
+  documentComments    DocumentComment[]
   notes               Note[]
   timeEntries         TimeEntry[]
   expensesSubmitted   Expense[]
@@ -329,29 +360,29 @@ model Session {
 // ─────────────────────────────────────────────────────────────────────────
 
 model Client {
-  id                   String       @id @default(cuid())
-  clientNumber         String       @unique
-  type                 ClientType   @default(COMPANY)
-  name                 String
-  companyName          String?
-  industry             String?
-  email                String?
-  phone                String?
-  addressLine1         String?
-  addressLine2         String?
-  city                 String?
-  state                String?
-  country              String?
-  postalCode           String?
-  taxId                String?
-  status               ClientStatus @default(ACTIVE)
-  source               String?
-  tags                 String?
-  avatarUrl            String?
+  id                    String       @id @default(cuid())
+  clientNumber          String       @unique
+  type                  ClientType   @default(COMPANY)
+  name                  String
+  companyName           String?
+  industry              String?
+  email                 String?
+  phone                 String?
+  addressLine1          String?
+  addressLine2          String?
+  city                  String?
+  state                 String?
+  country               String?
+  postalCode            String?
+  taxId                 String?
+  status                ClientStatus @default(ACTIVE)
+  source                String?
+  tags                  String?
+  avatarUrl             String?
   relationshipManagerId String?
-  relationshipManager  User?        @relation("RelationshipManager", fields: [relationshipManagerId], references: [id])
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  relationshipManager   User?        @relation("RelationshipManager", fields: [relationshipManagerId], references: [id])
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
   matters           Matter[]
   invoices          Invoice[]
@@ -371,27 +402,28 @@ model Client {
 
 model Matter {
   id                    String       @id @default(cuid())
-  matterNumber           String       @unique
-  title                  String
-  description            String?
-  clientId               String
-  client                 Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  practiceAreaId         String
-  practiceArea           PracticeArea @relation(fields: [practiceAreaId], references: [id])
-  status                 MatterStatus @default(INTAKE)
-  priority               Priority     @default(MEDIUM)
-  billingType            BillingType  @default(HOURLY)
-  hourlyRate             Float?
-  estimatedValue         Float?
-  openedDate             DateTime     @default(now())
-  targetCloseDate        DateTime?
-  closedDate             DateTime?
-  opposingParty          String?
-  opposingCounsel        String?
-  responsibleAttorneyId  String
-  responsibleAttorney    User         @relation("ResponsibleAttorney", fields: [responsibleAttorneyId], references: [id])
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
+  matterNumber          String       @unique
+  title                 String
+  description           String?
+  clientId              String
+  client                Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  practiceAreaId        String
+  practiceArea          PracticeArea @relation(fields: [practiceAreaId], references: [id])
+  status                MatterStatus @default(INTAKE)
+  stage                 MatterStage  @default(MATTER_CREATED)
+  priority              Priority     @default(MEDIUM)
+  billingType           BillingType  @default(HOURLY)
+  hourlyRate            Float?
+  estimatedValue        Float?
+  openedDate            DateTime     @default(now())
+  targetCloseDate       DateTime?
+  closedDate            DateTime?
+  opposingParty         String?
+  opposingCounsel       String?
+  responsibleAttorneyId String
+  responsibleAttorney   User         @relation("ResponsibleAttorney", fields: [responsibleAttorneyId], references: [id])
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
   team              MatterTeamMember[]
   hearings          Hearing[]
@@ -455,33 +487,33 @@ model Contact {
 }
 
 model Hearing {
-  id               String        @id @default(cuid())
-  matterId         String
-  matter           Matter        @relation(fields: [matterId], references: [id], onDelete: Cascade)
-  courtName        String
-  courtroom        String?
-  judge            String?
-  hearingType      String
-  scheduledAt      DateTime
-  status           HearingStatus @default(SCHEDULED)
-  outcome          String?
-  notes            String?
-  nextHearingDate  DateTime?
-  createdAt        DateTime      @default(now())
+  id              String        @id @default(cuid())
+  matterId        String
+  matter          Matter        @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  courtName       String
+  courtroom       String?
+  judge           String?
+  hearingType     String
+  scheduledAt     DateTime
+  status          HearingStatus @default(SCHEDULED)
+  outcome         String?
+  notes           String?
+  nextHearingDate DateTime?
+  createdAt       DateTime      @default(now())
 }
 
 model CourtCase {
-  id              String     @id @default(cuid())
-  matterId        String     @unique
-  matter          Matter     @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  id              String    @id @default(cuid())
+  matterId        String    @unique
+  matter          Matter    @relation(fields: [matterId], references: [id], onDelete: Cascade)
   caseNumber      String
   courtType       CourtType
   courtName       String
   filingDate      DateTime?
   judge           String?
-  stage           CaseStage  @default(FILING)
+  stage           CaseStage @default(FILING)
   nextHearingDate DateTime?
-  createdAt       DateTime   @default(now())
+  createdAt       DateTime  @default(now())
 }
 
 model Task {
@@ -506,43 +538,63 @@ model Task {
 // ─────────────────────────────────────────────────────────────────────────
 
 model DocumentFolder {
-  id       String          @id @default(cuid())
-  name     String
-  parentId String?
-  parent   DocumentFolder? @relation("FolderTree", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  children DocumentFolder[] @relation("FolderTree")
-  matterId String?
-  matter   Matter?         @relation(fields: [matterId], references: [id], onDelete: Cascade)
-  clientId String?
-  client   Client?         @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  createdAt DateTime       @default(now())
+  id        String           @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    DocumentFolder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children  DocumentFolder[] @relation("FolderTree")
+  matterId  String?
+  matter    Matter?          @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    Client?          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
 
   documents DocumentFile[]
 }
 
 model DocumentFile {
-  id             String         @id @default(cuid())
-  name           String
-  folderId       String?
-  folder         DocumentFolder? @relation(fields: [folderId], references: [id])
-  matterId       String?
-  matter         Matter?        @relation(fields: [matterId], references: [id], onDelete: Cascade)
-  clientId       String?
-  client         Client?        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  fileType       String
-  sizeBytes      Int            @default(0)
-  storagePath    String
-  version        Int            @default(1)
-  tags           String?
-  status         DocumentStatus @default(DRAFT)
-  isArchived     Boolean        @default(false)
-  isShared       Boolean        @default(false)
-  uploadedById   String
-  uploadedBy     User           @relation(fields: [uploadedById], references: [id])
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                   String          @id @default(cuid())
+  name                 String
+  folderId             String?
+  folder               DocumentFolder? @relation(fields: [folderId], references: [id])
+  matterId             String?
+  matter               Matter?         @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId             String?
+  client               Client?         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  fileType             String
+  sizeBytes            Int             @default(0)
+  storagePath          String
+  version              Int             @default(1)
+  tags                 String?
+  status               DocumentStatus  @default(DRAFT)
+  isArchived           Boolean         @default(false)
+  isShared             Boolean         @default(false)
+  uploadedById         String
+  uploadedBy           User            @relation(fields: [uploadedById], references: [id])
+  reviewedById         String?
+  reviewedBy           User?           @relation("DocumentReviewer", fields: [reviewedById], references: [id])
+  approvedById         String?
+  approvedBy           User?           @relation("DocumentApprover", fields: [approvedById], references: [id])
+  submittedForReviewAt DateTime?
+  approvedAt           DateTime?
+  clientApprovedAt     DateTime?
+  signedAt             DateTime?
+  filedAt              DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 
   versions DocumentVersion[]
+  comments DocumentComment[]
+}
+
+model DocumentComment {
+  id         String       @id @default(cuid())
+  documentId String
+  document   DocumentFile @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User         @relation(fields: [authorId], references: [id])
+  body       String
+  createdAt  DateTime     @default(now())
 }
 
 model DocumentVersion {
@@ -558,15 +610,15 @@ model DocumentVersion {
 }
 
 model Template {
-  id           String           @id @default(cuid())
-  name         String
-  category     TemplateCategory
-  description  String?
-  storagePath  String?
-  isFavorite   Boolean          @default(false)
-  usageCount   Int              @default(0)
-  lastUsedAt   DateTime?
-  createdAt    DateTime         @default(now())
+  id          String           @id @default(cuid())
+  name        String
+  category    TemplateCategory
+  description String?
+  storagePath String?
+  isFavorite  Boolean          @default(false)
+  usageCount  Int              @default(0)
+  lastUsedAt  DateTime?
+  createdAt   DateTime         @default(now())
 }
 
 model Clause {
@@ -632,20 +684,20 @@ model Payment {
 }
 
 model Expense {
-  id          String   @id @default(cuid())
-  matterId    String?
-  matter      Matter?  @relation(fields: [matterId], references: [id], onDelete: Cascade)
-  clientId    String?
-  client      Client?  @relation(fields: [clientId], references: [id])
-  category    String
-  description String
-  amount      Float
-  incurredAt  DateTime @default(now())
-  billable    Boolean  @default(true)
-  reimbursed  Boolean  @default(false)
+  id            String   @id @default(cuid())
+  matterId      String?
+  matter        Matter?  @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId      String?
+  client        Client?  @relation(fields: [clientId], references: [id])
+  category      String
+  description   String
+  amount        Float
+  incurredAt    DateTime @default(now())
+  billable      Boolean  @default(true)
+  reimbursed    Boolean  @default(false)
   submittedById String
-  submittedBy   User   @relation(fields: [submittedById], references: [id])
-  createdAt   DateTime @default(now())
+  submittedBy   User     @relation(fields: [submittedById], references: [id])
+  createdAt     DateTime @default(now())
 }
 
 model Retainer {
@@ -735,16 +787,16 @@ model Announcement {
 }
 
 model CourtListEntry {
-  id                 String    @id @default(cuid())
-  name               String
-  type               CourtType
-  city               String?
-  state              String?
-  address            String?
-  phone              String?
-  email              String?
-  caseNumberPattern  String?
-  createdAt          DateTime  @default(now())
+  id                String    @id @default(cuid())
+  name              String
+  type              CourtType
+  city              String?
+  state             String?
+  address           String?
+  phone             String?
+  email             String?
+  caseNumberPattern String?
+  createdAt         DateTime  @default(now())
 }
 
 model KnowledgeArticle {
@@ -761,17 +813,20 @@ model KnowledgeArticle {
 }
 
 model ActivityLog {
-  id         String   @id @default(cuid())
-  action     String
-  entityType String
-  entityId   String
-  matterId   String?
-  matter     Matter?  @relation(fields: [matterId], references: [id], onDelete: Cascade)
-  clientId   String?
-  client     Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  actorId    String
-  actor      User     @relation(fields: [actorId], references: [id])
-  createdAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  action        String
+  entityType    String
+  entityId      String
+  previousValue String?
+  currentValue  String?
+  source        String   @default("APP")
+  matterId      String?
+  matter        Matter?  @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  clientId      String?
+  client        Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  actorId       String
+  actor         User     @relation(fields: [actorId], references: [id])
+  createdAt     DateTime @default(now())
 }
 
 // ─────────────────────────────────────────────────────────────────────────

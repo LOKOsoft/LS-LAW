@@ -16,7 +16,10 @@ export async function getDocuments(options?: { scopeUserId?: string }) {
       matter: { select: { id: true, title: true, matterNumber: true } },
       client: { select: { id: true, name: true } },
       uploadedBy: { select: { name: true } },
+      reviewedBy: { select: { name: true } },
+      approvedBy: { select: { name: true } },
       versions: true,
+      comments: { include: { author: { select: { name: true } } }, orderBy: { createdAt: "desc" } },
     },
   });
 }

@@ -48,6 +48,14 @@ src/
 │   ├── constants/                    nav.ts (module registry), permission-matrix.ts
 │   ├── db/prisma.ts                  the one Prisma client singleton — always import from here
 │   ├── storage/local-storage.ts      local filesystem read/write for /storage
+│   ├── services/                     real business-rule/workflow services (errors, notifications,
+│   │                                   activity/audit log, workflow stage transitions) — the "service
+│   │                                   layer" the earlier audit deliberately didn't invent, because
+│   │                                   this is it, backed by Prisma
+│   ├── platform/                     future-SaaS scaffolding (auth/tenancy/billing/storage/
+│   │                                   notifications/AI provider interfaces, config, logging, cache,
+│   │                                   errors, security) — see platform/README.md; inert/local-only
+│   │                                   by default, never a hard dependency
 │   ├── format.ts                     date/currency/byte/initials/time-ago formatters
 │   └── utils.ts                      cn() and other framework-agnostic helpers
 │
@@ -59,6 +67,9 @@ src/
 │
 └── proxy.ts                          this Next.js version's renamed middleware.ts — cheap
                                         cookie-presence redirect only; real auth check is in dal.ts
+
+tests/                                 unit + integration (Vitest) and e2e/accessibility/performance/
+                                        visual (Playwright) — see docs/TESTING.md
 ```
 
 ## Rules for adding a new module
@@ -71,6 +82,6 @@ src/
 
 ## What does *not* exist (by design)
 
-- No `services/` layer with mock/placeholder implementations — `features/<module>/{queries,actions}.ts` *is* the service layer, backed by the real Prisma database. Do not add a parallel mock service layer; it would duplicate real, working code.
+- No `services/` layer with mock/placeholder implementations for anything the app already does for real — `features/<module>/{queries,actions}.ts` and `lib/services/*` *are* the service layer, backed by the real Prisma database. Do not add a parallel mock service layer for those. The one deliberate exception is `lib/platform/` — interfaces + mock/local implementations for capabilities the app has never had (billing, AI, multi-tenancy, cloud storage, external notifications), added to make a future hosted version cheaper to build, not to duplicate anything working today. See `lib/platform/README.md` before adding to it.
 - No global Modal/Drawer state provider — dialogs and sheets manage their own `open` state locally (or via the `useDisclosure` hook added in this audit) at the point of use; there's no app-wide modal manager because nothing needs to trigger a dialog from outside its own component tree yet.
 - No `redux`/global client-state store — TanStack Query (server cache) + local component state covers everything currently built.

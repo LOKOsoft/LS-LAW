@@ -8,6 +8,7 @@ import {
   ClientType,
   ClientStatus,
   MatterStatus,
+  MatterStage,
   BillingType,
   Priority,
   MatterTeamRole,
@@ -324,6 +325,21 @@ async function main() {
     { title: "Labour Court Settlement — Factory Workers Union", client: clients[8], pa: paEmployment, status: MatterStatus.ARCHIVED, priority: Priority.MEDIUM, billing: BillingType.HOURLY, attorney: priya, opposing: "Factory Workers Union", estValue: 1900000, openedDaysAgo: 400 },
   ];
 
+  function stageForStatus(status: MatterStatus): MatterStage {
+    if (status === MatterStatus.ARCHIVED) return MatterStage.ARCHIVE;
+    if (status === MatterStatus.CLOSED) return MatterStage.CLOSURE;
+    if (status === MatterStatus.INTAKE) return MatterStage.MATTER_CREATED;
+    if (status === MatterStatus.ON_HOLD) return rand([MatterStage.DOCUMENT_COLLECTION, MatterStage.RESEARCH]);
+    return rand([
+      MatterStage.DOCUMENT_COLLECTION,
+      MatterStage.RESEARCH,
+      MatterStage.DRAFTING,
+      MatterStage.INTERNAL_REVIEW,
+      MatterStage.COURT_HEARING,
+      MatterStage.BILLING,
+    ]);
+  }
+
   const matters = await Promise.all(
     matterDefs.map((m, i) => {
       const opened = subDays(new Date(), m.openedDaysAgo);
@@ -336,6 +352,7 @@ async function main() {
           clientId: m.client.id,
           practiceAreaId: m.pa.id,
           status: m.status,
+          stage: stageForStatus(m.status),
           priority: m.priority,
           billingType: m.billing,
           hourlyRate: m.billing === BillingType.HOURLY ? rand([9000, 12000, 15000, 18000, 22000]) : null,
@@ -567,7 +584,20 @@ async function main() {
         relPath,
         `LEXORA — ${kind.name}\nMatter: ${matter.title}\nClient: ${def.client.name}\nGenerated as seed placeholder content.\n`,
       );
-      const docStatus = rand([DocumentStatus.DRAFT, DocumentStatus.FINAL, DocumentStatus.FINAL, DocumentStatus.SHARED]);
+      const docStatus = rand([
+        DocumentStatus.DRAFT,
+        DocumentStatus.REVIEW,
+        DocumentStatus.PARTNER_APPROVAL,
+        DocumentStatus.SIGNED,
+        DocumentStatus.FINAL,
+        DocumentStatus.FINAL,
+        DocumentStatus.SHARED,
+      ]);
+      const reviewer = rand(fileHandlers.filter((u) => u.id !== uploader.id));
+      const reviewedStatuses: DocumentStatus[] = [DocumentStatus.REVIEW, DocumentStatus.PARTNER_APPROVAL, DocumentStatus.CLIENT_APPROVAL, DocumentStatus.SIGNED, DocumentStatus.FILED];
+      const approvedStatuses: DocumentStatus[] = [DocumentStatus.PARTNER_APPROVAL, DocumentStatus.CLIENT_APPROVAL, DocumentStatus.SIGNED, DocumentStatus.FILED];
+      const inReviewOrLater = reviewedStatuses.includes(docStatus);
+      const approvedOrLater = approvedStatuses.includes(docStatus);
       await prisma.documentFile.create({
         data: {
           name: fileName,
@@ -582,6 +612,11 @@ async function main() {
           status: docStatus,
           isShared: docStatus === DocumentStatus.SHARED,
           uploadedById: uploader.id,
+          reviewedById: inReviewOrLater ? reviewer.id : null,
+          submittedForReviewAt: inReviewOrLater ? subDays(now, randInt(1, 30)) : null,
+          approvedById: approvedOrLater ? reviewer.id : null,
+          approvedAt: approvedOrLater ? subDays(now, randInt(0, 20)) : null,
+          signedAt: docStatus === DocumentStatus.SIGNED ? subDays(now, randInt(0, 10)) : null,
           createdAt: subDays(now, randInt(0, 60)),
         },
       });

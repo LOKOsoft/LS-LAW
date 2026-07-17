@@ -14,7 +14,7 @@ export default async function AccountsMatterDetailPage({ params }: { params: Pro
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} basePath={ACCOUNTS_BASE} />
+      <MatterHeader matter={matter} basePath={ACCOUNTS_BASE} currentUserId={currentUser.id} />
       <MatterDetailTabs matter={matter} currentUserId={currentUser.id} research={research} />
     </div>
   );

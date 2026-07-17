@@ -76,9 +76,34 @@ const INVOICE_STATUS_TONE: Record<string, StatusTone> = {
 
 const DOCUMENT_STATUS_TONE: Record<string, StatusTone> = {
   DRAFT: "neutral",
+  REVIEW: "warning",
+  PARTNER_APPROVAL: "warning",
+  CLIENT_APPROVAL: "info",
+  SIGNED: "primary",
+  FILED: "success",
   FINAL: "success",
   ARCHIVED: "neutral",
   SHARED: "info",
+};
+
+const MATTER_STAGE_TONE: Record<string, StatusTone> = {
+  INQUIRY: "neutral",
+  CONFLICT_CHECK: "neutral",
+  CONSULTATION: "info",
+  MATTER_CREATED: "info",
+  DOCUMENT_COLLECTION: "info",
+  RESEARCH: "info",
+  DRAFTING: "warning",
+  INTERNAL_REVIEW: "warning",
+  CLIENT_REVIEW: "warning",
+  APPROVAL: "warning",
+  FILING: "primary",
+  COURT_HEARING: "primary",
+  ORDER: "primary",
+  BILLING: "success",
+  PAYMENT: "success",
+  CLOSURE: "neutral",
+  ARCHIVE: "neutral",
 };
 
 const CLIENT_STATUS_TONE: Record<string, StatusTone> = {
@@ -116,3 +141,4 @@ export const InvoiceStatusPill = buildPill(INVOICE_STATUS_TONE);
 export const DocumentStatusPill = buildPill(DOCUMENT_STATUS_TONE);
 export const ClientStatusPill = buildPill(CLIENT_STATUS_TONE);
 export const PriorityPill = buildPill(PRIORITY_TONE);
+export const MatterStagePill = buildPill(MATTER_STAGE_TONE);

@@ -158,6 +158,9 @@ async function getDocumentStatusBreakdown() {
   const map = Object.fromEntries(grouped.map((g) => [g.status, g._count._all])) as Record<DocumentStatus, number>;
   return [
     { status: "Draft", count: map.DRAFT ?? 0 },
+    { status: "In Review", count: (map.REVIEW ?? 0) + (map.PARTNER_APPROVAL ?? 0) + (map.CLIENT_APPROVAL ?? 0) },
+    { status: "Signed", count: map.SIGNED ?? 0 },
+    { status: "Filed", count: map.FILED ?? 0 },
     { status: "Final", count: map.FINAL ?? 0 },
     { status: "Shared", count: map.SHARED ?? 0 },
     { status: "Archived", count: map.ARCHIVED ?? 0 },

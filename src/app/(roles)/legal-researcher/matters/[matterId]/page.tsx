@@ -17,7 +17,7 @@ export default async function LegalResearcherMatterDetailPage({ params }: { para
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} basePath={LEGAL_RESEARCHER_BASE} />
+      <MatterHeader matter={matter} basePath={LEGAL_RESEARCHER_BASE} currentUserId={user.id} />
       <MatterDetailTabs matter={matter} currentUserId={user.id} research={research} />
     </div>
   );

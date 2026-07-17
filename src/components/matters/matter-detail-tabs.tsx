@@ -1,10 +1,12 @@
 "use client";
 
+import * as React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Timeline } from "@/components/shared/timeline";
 import { AddNoteForm } from "@/components/clients/add-note-form";
+import { UpdateHearingDialog } from "@/components/hearings/update-hearing-dialog";
 import {
   HearingStatusPill,
   TaskStatusPill,
@@ -28,7 +30,10 @@ export function MatterDetailTabs({
   currentUserId: string;
   research: ResearchArticle[];
 }) {
+  const [selectedHearing, setSelectedHearing] = React.useState<MatterDetail["hearings"][number] | null>(null);
+
   return (
+    <>
     <Tabs defaultValue="timeline" className="gap-4">
       <TabsList className="flex w-full flex-wrap justify-start gap-1 bg-transparent p-0">
         <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -76,7 +81,12 @@ export function MatterDetailTabs({
         ) : (
           <div className="space-y-2">
             {matter.hearings.map((h) => (
-              <div key={h.id} className="flex items-center justify-between rounded-lg border border-border/70 px-4 py-3">
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => setSelectedHearing(h)}
+                className="flex w-full items-center justify-between rounded-lg border border-border/70 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{h.hearingType} — {h.courtName}</p>
                   <p className="truncate text-xs text-muted-foreground">
@@ -88,7 +98,7 @@ export function MatterDetailTabs({
                   <HearingStatusPill status={h.status} />
                   <span className="text-xs text-muted-foreground">{formatDateTime(h.scheduledAt)}</span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -234,7 +244,13 @@ export function MatterDetailTabs({
           emptyTitle="No activity recorded yet"
         />
       </TabsContent>
-    </Tabs>
+      </Tabs>
+      <UpdateHearingDialog
+        hearing={selectedHearing}
+        open={selectedHearing !== null}
+        onOpenChange={(open) => !open && setSelectedHearing(null)}
+      />
+    </>
   );
 }
 

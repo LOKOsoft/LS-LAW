@@ -60,7 +60,16 @@ npm run db:reset     # drop, recreate, migrate, and reseed the database
 npm run typecheck    # tsc --noEmit
 npm run lint          # eslint
 npm run build         # production build
+npm run analyze       # production build with the bundle analyzer report
+
+npm run test           # unit + integration tests (Vitest)
+npm run test:e2e        # end-to-end tests (Playwright, needs the dev server)
+npm run test:a11y       # accessibility checks (axe-core via Playwright)
+npm run test:performance # coarse page-load budget checks
+npm run test:visual      # visual regression screenshots
 ```
+
+See `docs/TESTING.md` for what each test category covers and how to run them locally.
 
 ## Data & storage
 
@@ -106,3 +115,14 @@ npm run build         # production build
 - **Client Portal** (`/client`) is a separate, minimal-chrome shell (no
   sidebar) gated by `requirePortalUser()`, scoped to exactly one `Client`
   record via `User.clientId`.
+
+## SaaS-readiness layer (`src/lib/platform`)
+
+The app still runs entirely locally with zero external services and zero
+required configuration. `src/lib/platform` adds interface-driven scaffolding
+— auth/permission/session contracts, multi-tenancy, billing/subscriptions,
+storage, notifications, AI, config, logging, caching, and security — so a
+future hosted version doesn't require re-architecting call sites, just
+writing a new provider and flipping a config value. See
+`src/lib/platform/README.md` for the module-by-module rules and
+`docs/FUTURE_INTEGRATIONS.md` for how to actually turn one on.

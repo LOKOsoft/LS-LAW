@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { saveFileToStorage, extensionOf } from "@/lib/storage/local-storage";
 import { getSessionUser } from "@/lib/auth/session";
+import { validateUploadedFile } from "@/lib/platform/security/file-validation";
 
 export async function POST(request: Request) {
   const uploader = await getSessionUser();
@@ -17,6 +18,11 @@ export async function POST(request: Request) {
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
+  }
+
+  const validation = validateUploadedFile({ name: file.name, size: file.size });
+  if (!validation.valid) {
+    return NextResponse.json({ error: validation.reason }, { status: 400 });
   }
 
   const owner = typeof matterId === "string" && matterId ? matterId : "unfiled";
