@@ -99,6 +99,18 @@ Same file/class for the rate limiter's future Redis backing
 via config the way cache is; would need the same treatment if/when it's
 needed).
 
+## Public API, webhooks, and RBAC → see docs/API_PREPARATION.md
+
+These three (`lib/platform/api`, `lib/platform/webhooks`, `lib/platform/rbac`)
+are interface-only with no real backing infrastructure — there's no
+public API surface, no outbound webhook delivery, and no per-tenant
+custom-role system in this app today (RBAC today is the real, working
+fixed 13-role + F/C/V/— matrix; `rbac/` just exposes it under an explicit
+`PolicyEvaluator` interface a future custom-role system would implement
+instead). `docs/API_PREPARATION.md` has the full readiness assessment —
+what a real API layer, API-key auth, and signed webhook delivery would
+each require — rather than repeating it here.
+
 ## Logging → a real cloud log provider
 
 **Today:** `ConsoleLogProvider` (structured JSON to stdout/stderr) — note

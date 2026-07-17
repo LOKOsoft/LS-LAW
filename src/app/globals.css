@@ -67,7 +67,10 @@
   --secondary: oklch(0.96 0.006 260);
   --secondary-foreground: oklch(0.28 0.02 260);
   --muted: oklch(0.966 0.005 260);
-  --muted-foreground: oklch(0.51 0.018 260);
+  /* Darkened from 0.51 — verified against tests/accessibility: 0.51 failed WCAG AA
+     4.5:1 for small text once any opacity modifier (e.g. text-muted-foreground/80,
+     used for sidebar section labels) was applied on top of it. */
+  --muted-foreground: oklch(0.42 0.018 260);
   --accent: oklch(0.94 0.03 264);
   --accent-foreground: oklch(0.33 0.1 264);
   --destructive: oklch(0.577 0.215 27.325);
@@ -109,7 +112,8 @@
   --secondary: oklch(0.27 0.016 260);
   --secondary-foreground: oklch(0.92 0.006 260);
   --muted: oklch(0.255 0.015 260);
-  --muted-foreground: oklch(0.66 0.014 260);
+  /* Lightened from 0.66 for the same reason as the light-mode value above — see that comment. */
+  --muted-foreground: oklch(0.74 0.014 260);
   --accent: oklch(0.3 0.05 264);
   --accent-foreground: oklch(0.9 0.03 264);
   --destructive: oklch(0.7 0.19 22.216);

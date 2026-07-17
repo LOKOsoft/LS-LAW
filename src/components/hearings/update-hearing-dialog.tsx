@@ -91,13 +91,13 @@ export function UpdateHearingDialog({
     >
       <div className="space-y-4 py-2">
         <div className="space-y-1.5">
-          <Label>Date &amp; time</Label>
-          <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+          <Label htmlFor="hearing-scheduled-at">Date &amp; time</Label>
+          <Input id="hearing-scheduled-at" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label>Status</Label>
+          <Label htmlFor="hearing-status">Status</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as HearingStatusValue)}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger id="hearing-status" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -109,12 +109,12 @@ export function UpdateHearingDialog({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Outcome</Label>
-          <Input placeholder="e.g. Adjourned to next date, Order reserved..." value={outcome} onChange={(e) => setOutcome(e.target.value)} />
+          <Label htmlFor="hearing-outcome">Outcome</Label>
+          <Input id="hearing-outcome" placeholder="e.g. Adjourned to next date, Order reserved..." value={outcome} onChange={(e) => setOutcome(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label>Notes</Label>
-          <Textarea placeholder="Internal notes about this hearing..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+          <Label htmlFor="hearing-notes">Notes</Label>
+          <Textarea id="hearing-notes" placeholder="Internal notes about this hearing..." value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
       </div>
     </FormModal>

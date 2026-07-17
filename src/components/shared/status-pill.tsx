@@ -3,13 +3,17 @@ import { cn } from "@/lib/utils";
 
 export type StatusTone = "neutral" | "info" | "success" | "warning" | "destructive" | "primary";
 
+// Text colors are deliberately darker/lighter than the shared --success/--warning/etc.
+// tokens used elsewhere (buttons, icons) — those tokens weren't calibrated for small
+// (12px) text on a 10%-opacity tinted background, which needs a much higher-contrast
+// shade to meet WCAG AA's 4.5:1 ratio for small text. Verified against tests/accessibility.
 const toneStyles: Record<StatusTone, string> = {
   neutral: "bg-muted text-muted-foreground",
-  info: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-  success: "bg-success/10 text-success",
-  warning: "bg-warning/10 text-warning",
-  destructive: "bg-destructive/10 text-destructive",
-  primary: "bg-primary/10 text-primary",
+  info: "bg-sky-500/10 text-sky-800 dark:text-sky-300",
+  success: "bg-success/10 text-[oklch(0.36_0.13_155)] dark:text-[oklch(0.86_0.13_155)]",
+  warning: "bg-warning/10 text-[oklch(0.38_0.14_75)] dark:text-[oklch(0.88_0.14_75)]",
+  destructive: "bg-destructive/10 text-[oklch(0.42_0.2_27)] dark:text-[oklch(0.82_0.16_25)]",
+  primary: "bg-primary/10 text-[oklch(0.38_0.16_264)] dark:text-[oklch(0.85_0.13_264)]",
 };
 
 const dotStyles: Record<StatusTone, string> = {

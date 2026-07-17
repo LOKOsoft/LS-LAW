@@ -36,5 +36,8 @@ firm.
 | AI | N/A — doesn't exist | Fully mock, deterministic canned responses — no network calls. |
 | Caching | N/A — queries hit Prisma directly | In-memory TTL cache, unused by default; opt-in per call site. |
 | Logging | `src/lib/services/activity.ts` (`ActivityLog` — the business audit trail) | `logging/` is a separate *operational* logger (console by default) for app/perf/error/security events — it is not a replacement for `ActivityLog` and must not be used for business audit records. |
+| RBAC | `lib/constants/permission-matrix.ts` + `nav.ts` (the real, working F/C/V/— matrix) | `rbac/` adapts that same data into an explicit `PolicyEvaluator` shape a future per-tenant custom-role system would implement — not a second source of truth. |
+| Public API | N/A — no public API exists | Fully mock; `ApiKeyAuthProvider.verify()` always returns null (fails closed). See `docs/API_PREPARATION.md`. |
+| Webhooks | N/A — no outbound webhooks exist | Fully mock; `dispatch()` logs instead of delivering, `subscribe()` throws (no persistence backing it). See `docs/API_PREPARATION.md`. |
 
-See `docs/FUTURE_INTEGRATIONS.md` for how to actually swap a provider when this becomes a hosted product.
+See `docs/FUTURE_INTEGRATIONS.md` for how to actually swap a provider when this becomes a hosted product, and `docs/API_PREPARATION.md` for the public-API/webhook/third-party-integration readiness assessment specifically.

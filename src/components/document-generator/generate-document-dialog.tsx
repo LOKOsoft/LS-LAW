@@ -80,7 +80,7 @@ export function GenerateDocumentDialog({ matters, clients }: { matters: Option[]
         <div className="space-y-1.5">
           <Label>Document type</Label>
           <Select value={documentType} onValueChange={handleTypeChange}>
-            <SelectTrigger>
+            <SelectTrigger aria-label="Document type">
               <SelectValue placeholder="Select a document type" />
             </SelectTrigger>
             <SelectContent>
@@ -99,7 +99,7 @@ export function GenerateDocumentDialog({ matters, clients }: { matters: Option[]
               <div className="space-y-1.5">
                 <Label>Link to matter (optional)</Label>
                 <Select value={matterId} onValueChange={setMatterId}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Link to matter (optional)">
                     <SelectValue placeholder="None" />
                   </SelectTrigger>
                   <SelectContent>
@@ -114,7 +114,7 @@ export function GenerateDocumentDialog({ matters, clients }: { matters: Option[]
               <div className="space-y-1.5">
                 <Label>Link to client (optional)</Label>
                 <Select value={clientId} onValueChange={setClientId}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Link to client (optional)">
                     <SelectValue placeholder="None" />
                   </SelectTrigger>
                   <SelectContent>

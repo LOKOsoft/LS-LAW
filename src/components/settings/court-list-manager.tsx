@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormModal } from "@/components/shared/form-modal";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { createCourtListEntry, deleteCourtListEntry } from "@/features/settings/actions";
 import { CourtType } from "@/generated/prisma/client";
 
@@ -40,6 +41,7 @@ export function CourtListManager({ courts }: { courts: CourtListEntry[] }) {
   const [city, setCity] = React.useState("");
   const [state, setState] = React.useState("");
   const [pattern, setPattern] = React.useState("");
+  const [pendingDelete, setPendingDelete] = React.useState<{ id: string; name: string } | null>(null);
 
   async function handleCreate() {
     if (!name.trim()) {
@@ -62,12 +64,15 @@ export function CourtListManager({ courts }: { courts: CourtListEntry[] }) {
     }
   }
 
-  async function handleDelete(id: string, courtName: string) {
+  async function handleDelete() {
+    if (!pendingDelete) return;
     try {
-      await deleteCourtListEntry(id);
-      toast.success(`${courtName} removed`);
+      await deleteCourtListEntry(pendingDelete.id);
+      toast.success(`${pendingDelete.name} removed`);
     } catch {
       toast.error("Could not remove court.");
+    } finally {
+      setPendingDelete(null);
     }
   }
 
@@ -154,13 +159,22 @@ export function CourtListManager({ courts }: { courts: CourtListEntry[] }) {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <Badge variant="outline">{court.type.replace(/_/g, " ")}</Badge>
-              <Button size="icon" variant="ghost" onClick={() => handleDelete(court.id, court.name)}>
+              <Button size="icon" variant="ghost" aria-label={`Remove ${court.name}`} onClick={() => setPendingDelete({ id: court.id, name: court.name })}>
                 <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
           </CardContent>
         </Card>
       ))}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(next) => !next && setPendingDelete(null)}
+        title={`Remove ${pendingDelete?.name ?? "this court"}?`}
+        description="It will no longer appear in the court list or case-number validation. This doesn't affect any existing hearings or court cases already on file."
+        confirmLabel="Remove"
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

@@ -126,3 +126,9 @@ future hosted version doesn't require re-architecting call sites, just
 writing a new provider and flipping a config value. See
 `src/lib/platform/README.md` for the module-by-module rules and
 `docs/FUTURE_INTEGRATIONS.md` for how to actually turn one on.
+
+## Contributing & further documentation
+
+See `CONTRIBUTING.md` for coding standards and local conventions, and
+`docs/` for everything else — architecture, database, testing, security,
+performance, deployment, and the full documentation index.

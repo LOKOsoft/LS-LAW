@@ -209,8 +209,6 @@ export const OFFICE_MANAGER_MODULE_KEYS: ModuleKey[] = ["dashboard", "calendar",
 // Administrator: full system visibility + full Settings/Audit Logs control.
 export const ADMINISTRATOR_MODULE_KEYS: ModuleKey[] = ALL_MODULE_KEYS;
 
-export const navSections: ResolvedNavSection[] = buildNavSections(MANAGING_PARTNER_BASE, ALL_MODULE_KEYS);
-
 export const roleRoutes: { label: string; href: string }[] = [
   { label: "Managing Partner", href: "/managing-partner" },
   { label: "Senior Partner", href: "/senior-partner" },

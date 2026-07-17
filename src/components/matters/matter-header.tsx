@@ -32,7 +32,9 @@ export function MatterHeader({
               {matter.client.name}
             </Link>{" "}
             ·{" "}
-            <span style={{ color: matter.practiceArea.color }} className="font-medium">
+            <span className="inline-flex items-center gap-1.5 font-medium">
+              {/* Practice area color is firm-configurable (Settings) and can't be contrast-checked at render time — shown as a decorative dot, never as text color, so label legibility never depends on which color was picked. */}
+              <span aria-hidden="true" className="size-2 shrink-0 rounded-full" style={{ backgroundColor: matter.practiceArea.color }} />
               {matter.practiceArea.name}
             </span>
           </p>

@@ -59,7 +59,7 @@ export function DocumentsExplorer({ documents }: { documents: DocumentListItem[]
         searchPlaceholder="Search documents by name or tag..."
         filters={
           <Select value={fileType} onValueChange={setFileType}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-36" aria-label="Filter by file type">
               <SelectValue placeholder="File type" />
             </SelectTrigger>
             <SelectContent>

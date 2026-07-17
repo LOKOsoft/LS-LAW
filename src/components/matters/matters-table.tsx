@@ -48,7 +48,7 @@ export function MattersTable({
         filters={
           <>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40" aria-label="Filter by status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -61,7 +61,7 @@ export function MattersTable({
               </SelectContent>
             </Select>
             <Select value={filters.priority ?? "ALL"} onValueChange={(v) => setFilter("priority", v)}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-36" aria-label="Filter by priority">
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>
@@ -73,7 +73,7 @@ export function MattersTable({
               </SelectContent>
             </Select>
             <Select value={filters.practiceArea ?? "ALL"} onValueChange={(v) => setFilter("practiceArea", v)}>
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="w-44" aria-label="Filter by practice area">
                 <SelectValue placeholder="Practice area" />
               </SelectTrigger>
               <SelectContent>

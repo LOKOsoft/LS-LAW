@@ -54,7 +54,7 @@ export function TasksBoard({ tasks, assignees }: { tasks: TaskListItem[]; assign
         searchPlaceholder="Search tasks by title..."
         filters={
           <Select value={assigneeId} onValueChange={setAssigneeId}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48" aria-label="Filter by assignee">
               <SelectValue placeholder="Assignee" />
             </SelectTrigger>
             <SelectContent>

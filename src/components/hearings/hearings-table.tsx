@@ -37,7 +37,7 @@ export function HearingsTable({ hearings }: { hearings: HearingListItem[] }) {
         filters={
           <>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40" aria-label="Filter by status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -49,7 +49,7 @@ export function HearingsTable({ hearings }: { hearings: HearingListItem[] }) {
               </SelectContent>
             </Select>
             <Select value={filters.court ?? "ALL"} onValueChange={(v) => setFilter("court", v)}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-48" aria-label="Filter by court">
                 <SelectValue placeholder="Court" />
               </SelectTrigger>
               <SelectContent>

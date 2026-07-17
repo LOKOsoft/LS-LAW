@@ -55,7 +55,7 @@ export function TeamTable({ members }: { members: TeamMember[] }) {
         searchPlaceholder="Search team members..."
         filters={
           <Select value={role} onValueChange={setRole}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48" aria-label="Filter by role">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>

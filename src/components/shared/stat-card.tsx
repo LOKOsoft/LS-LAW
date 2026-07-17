@@ -43,7 +43,10 @@ export function StatCard({ label, value, icon, trend, hint, accent = "primary", 
                 <span
                   className={cn(
                     "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5",
-                    isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
+                    // Same WCAG-AA-calibrated colors as status-pill.tsx's tone styles — see that file's comment.
+                    isPositive
+                      ? "bg-success/10 text-[oklch(0.36_0.13_155)] dark:text-[oklch(0.86_0.13_155)]"
+                      : "bg-destructive/10 text-[oklch(0.42_0.2_27)] dark:text-[oklch(0.82_0.16_25)]",
                   )}
                 >
                   {isPositive ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}

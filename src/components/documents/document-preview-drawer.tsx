@@ -211,7 +211,7 @@ export function DocumentPreviewDrawer({
                   onChange={(e) => setComment(e.target.value)}
                   className="min-h-9"
                 />
-                <Button size="icon" variant="outline" disabled={isSubmitting || !comment.trim()} onClick={handleAddComment}>
+                <Button size="icon" variant="outline" aria-label="Post comment" disabled={isSubmitting || !comment.trim()} onClick={handleAddComment}>
                   <Send className="size-4" />
                 </Button>
               </div>

@@ -12,7 +12,14 @@ export class BrowserCacheProvider implements CacheProvider {
     if (typeof window === "undefined") return undefined;
     const raw = window.localStorage.getItem(this.namespace + key);
     if (!raw) return undefined;
-    const parsed = JSON.parse(raw) as StoredValue;
+    let parsed: StoredValue;
+    try {
+      parsed = JSON.parse(raw) as StoredValue;
+    } catch {
+      // Malformed entry (hand-edited, corrupted, or written by an older/incompatible version) — treat as a cache miss rather than throwing.
+      window.localStorage.removeItem(this.namespace + key);
+      return undefined;
+    }
     if (parsed.expiresAt !== null && parsed.expiresAt < Date.now()) {
       window.localStorage.removeItem(this.namespace + key);
       return undefined;

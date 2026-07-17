@@ -13,11 +13,14 @@ import { CourtListManager } from "@/components/settings/court-list-manager";
 import { PERMISSION_ROLES, PERMISSION_MATRIX, type AccessLevel } from "@/lib/constants/permission-matrix";
 import type { getSettingsData } from "@/features/settings/queries";
 
+// Same WCAG-AA-calibrated colors as components/shared/status-pill.tsx's tone styles —
+// duplicated here rather than reused because this renders bare F/C/V letters, not a
+// pill, but the contrast requirement (and fix) is identical. See that file's comment.
 const ACCESS_STYLE: Record<AccessLevel, string> = {
-  F: "bg-success/10 text-success",
-  C: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+  F: "bg-success/10 text-[oklch(0.36_0.13_155)] dark:text-[oklch(0.86_0.13_155)]",
+  C: "bg-sky-500/10 text-sky-800 dark:text-sky-300",
   V: "bg-muted text-muted-foreground",
-  "—": "text-muted-foreground/40",
+  "—": "text-muted-foreground",
 };
 
 export function SettingsTabs({ data }: { data: Awaited<ReturnType<typeof getSettingsData>> }) {

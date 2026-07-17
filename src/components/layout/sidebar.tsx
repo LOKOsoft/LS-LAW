@@ -31,7 +31,7 @@ export function Sidebar({ basePath, allowedKeys, roleLabel }: SidebarProps) {
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
         {navSections.map((section) => (
           <div key={section.label} className="space-y-1">
-            <p className="px-2.5 text-[11px] font-semibold tracking-wider text-muted-foreground/80 uppercase">
+            <p className="px-2.5 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
               {section.label}
             </p>
             {section.items.map((item) => {

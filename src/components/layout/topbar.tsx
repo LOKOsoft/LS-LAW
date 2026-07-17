@@ -77,9 +77,9 @@ export function Topbar({ firmName, userName, userTitle, notifications, unreadCou
       <div className="flex shrink-0 items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="hidden gap-1.5 sm:inline-flex">
+            <Button size="sm" className="gap-1.5" aria-label="Quick actions">
               <Plus className="size-4" />
-              Quick Actions
+              <span className="hidden sm:inline">Quick Actions</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -97,15 +97,11 @@ export function Topbar({ firmName, userName, userTitle, notifications, unreadCou
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button size="icon" variant="outline" className="sm:hidden">
-          <Plus className="size-4" />
-        </Button>
-
         <ThemeToggle />
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button size="icon" variant="outline" className="relative">
+            <Button size="icon" variant="outline" className="relative" aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}>
               <Bell className="size-4" />
               {unreadCount > 0 ? (
                 <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">

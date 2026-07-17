@@ -21,11 +21,9 @@ export const matterColumns: ColumnDef<MatterListItem>[] = [
     accessorKey: "practiceArea.name",
     header: "Practice area",
     cell: ({ row }) => (
-      <Badge
-        variant="outline"
-        className="whitespace-nowrap"
-        style={{ borderColor: row.original.practiceArea.color, color: row.original.practiceArea.color }}
-      >
+      <Badge variant="outline" className="gap-1.5 whitespace-nowrap" style={{ borderColor: row.original.practiceArea.color }}>
+        {/* Practice area color is firm-configurable and can't be contrast-checked at render time — shown as a decorative dot + border tint, never as text color. See matter-header.tsx's matching fix. */}
+        <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: row.original.practiceArea.color }} />
         {row.original.practiceArea.name}
       </Badge>
     ),

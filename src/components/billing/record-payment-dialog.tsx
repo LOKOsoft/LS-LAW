@@ -81,13 +81,13 @@ export function RecordPaymentDialog({
     >
       <div className="space-y-4 py-2">
         <div className="space-y-1.5">
-          <Label>Amount (₹)</Label>
-          <Input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <Label htmlFor="payment-amount">Amount (₹)</Label>
+          <Input id="payment-amount" type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label>Method</Label>
+          <Label htmlFor="payment-method">Method</Label>
           <Select value={method} onValueChange={(v) => setMethod(v as PaymentMethodValue)}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger id="payment-method" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -100,8 +100,8 @@ export function RecordPaymentDialog({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Reference</Label>
-          <Input placeholder="Transaction / cheque number..." value={reference} onChange={(e) => setReference(e.target.value)} />
+          <Label htmlFor="payment-reference">Reference</Label>
+          <Input id="payment-reference" placeholder="Transaction / cheque number..." value={reference} onChange={(e) => setReference(e.target.value)} />
         </div>
       </div>
     </FormModal>

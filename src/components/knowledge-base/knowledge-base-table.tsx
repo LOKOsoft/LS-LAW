@@ -53,7 +53,7 @@ export function KnowledgeBaseTable({ articles }: { articles: KnowledgeArticleIte
         searchPlaceholder="Search knowledge base..."
         filters={
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48" aria-label="Filter by category">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>

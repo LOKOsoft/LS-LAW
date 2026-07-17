@@ -56,7 +56,7 @@ export function ClientsTable({
         searchPlaceholder="Search clients by name, number, industry..."
         filters={
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40" aria-label="Filter by status">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>

@@ -36,7 +36,7 @@ function InvoicesTab({ invoices, onRowClick }: { invoices: InvoiceListItem[]; on
         filters={
           <>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40" aria-label="Filter by status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -50,7 +50,7 @@ function InvoicesTab({ invoices, onRowClick }: { invoices: InvoiceListItem[]; on
               </SelectContent>
             </Select>
             <Select value={filters.client ?? "ALL"} onValueChange={(v) => setFilter("client", v)}>
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="w-44" aria-label="Filter by client">
                 <SelectValue placeholder="Client" />
               </SelectTrigger>
               <SelectContent>
