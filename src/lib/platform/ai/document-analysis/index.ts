@@ -1,0 +1,26 @@
+export type {
+  DocumentClassification,
+  DocumentClassificationService,
+  ExtractedMetadata,
+  MetadataExtractionService,
+  NamedEntity,
+  NamedEntityExtractionService,
+  DetectedAmount,
+  AmountDetectionService,
+  DetectedParty,
+  PartyDetectionService,
+  SignatureDetectionResult,
+  SignatureDetectionService,
+  VersionComparisonSummary,
+  VersionComparisonService,
+} from "@/lib/platform/ai/document-analysis/types";
+export {
+  MockDocumentClassificationService,
+  MockMetadataExtractionService,
+  MockNamedEntityExtractionService,
+  MockDateDetectionService,
+  MockAmountDetectionService,
+  MockPartyDetectionService,
+  MockSignatureDetectionService,
+  MockVersionComparisonService,
+} from "@/lib/platform/ai/document-analysis/mock-document-analysis";

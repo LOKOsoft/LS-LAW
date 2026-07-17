@@ -9,13 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatNumber } from "@/lib/format";
 import type { KnowledgeArticleItem } from "@/features/knowledge-base/queries";
+import { matchesKnowledgeQuery } from "@/features/knowledge-base/search";
 import { useTableFilters } from "@/hooks/use-table-filters";
 
 export function KnowledgeBaseTable({ articles }: { articles: KnowledgeArticleItem[] }) {
   const categories = React.useMemo(() => Array.from(new Set(articles.map((a) => a.category))), [articles]);
 
   const { search, setSearch, filterValue: category, setFilterValue: setCategory, filtered } = useTableFilters(articles, {
-    search: (a, q) => a.title.toLowerCase().includes(q),
+    search: (a, q) => matchesKnowledgeQuery(a, q),
     filter: (a, value) => a.category === value,
   });
 

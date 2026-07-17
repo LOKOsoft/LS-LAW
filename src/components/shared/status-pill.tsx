@@ -120,6 +120,20 @@ const PRIORITY_TONE: Record<string, StatusTone> = {
   URGENT: "destructive",
 };
 
+const GENERATED_DOCUMENT_STATUS_TONE: Record<string, StatusTone> = {
+  DRAFT: "neutral",
+  IN_REVIEW: "warning",
+  REVISION_REQUESTED: "destructive",
+  APPROVED: "primary",
+  EXPORTED: "success",
+};
+
+const RISK_SEVERITY_TONE: Record<string, StatusTone> = {
+  LOW: "info",
+  MEDIUM: "warning",
+  HIGH: "destructive",
+};
+
 function titleCase(value: string): string {
   return value
     .toLowerCase()
@@ -142,3 +156,5 @@ export const DocumentStatusPill = buildPill(DOCUMENT_STATUS_TONE);
 export const ClientStatusPill = buildPill(CLIENT_STATUS_TONE);
 export const PriorityPill = buildPill(PRIORITY_TONE);
 export const MatterStagePill = buildPill(MATTER_STAGE_TONE);
+export const GeneratedDocumentStatusPill = buildPill(GENERATED_DOCUMENT_STATUS_TONE);
+export const RiskSeverityPill = buildPill(RISK_SEVERITY_TONE);

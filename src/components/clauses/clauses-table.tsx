@@ -4,13 +4,15 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BookMarked, Star } from "lucide-react";
+import { BookMarked, Star, Copy } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { RiskSeverityPill } from "@/components/shared/status-pill";
 import { cn } from "@/lib/utils";
-import { toggleClauseFavorite } from "@/features/clauses/actions";
+import { toggleClauseFavorite, recordClauseUsage } from "@/features/clauses/actions";
 import type { ClauseItem } from "@/features/clauses/queries";
 import { useTableFilters } from "@/hooks/use-table-filters";
 
@@ -33,6 +35,17 @@ export function ClausesTable({ clauses }: { clauses: ClauseItem[] }) {
     }
   }
 
+  async function handleUse(clause: ClauseItem) {
+    try {
+      await navigator.clipboard.writeText(clause.body);
+      await recordClauseUsage(clause.id);
+      toast.success("Clause copied to clipboard");
+      router.refresh();
+    } catch {
+      toast.error("Could not copy the clause");
+    }
+  }
+
   const columns: ColumnDef<ClauseItem>[] = [
     {
       accessorKey: "title",
@@ -48,11 +61,27 @@ export function ClausesTable({ clauses }: { clauses: ClauseItem[] }) {
     },
     { accessorKey: "category", header: "Category", cell: ({ row }) => <Badge variant="outline">{row.original.category}</Badge> },
     {
+      accessorKey: "jurisdiction",
+      header: "Jurisdiction",
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.jurisdiction ?? "—"}</span>,
+    },
+    { accessorKey: "riskLevel", header: "Risk", cell: ({ row }) => <RiskSeverityPill status={row.original.riskLevel} /> },
+    {
       accessorKey: "body",
       header: "Preview",
       cell: ({ row }) => <span className="line-clamp-1 max-w-md text-sm text-muted-foreground">{row.original.body}</span>,
     },
     { accessorKey: "usageCount", header: "Uses", cell: ({ row }) => <span className="text-sm tabular-nums text-foreground">{row.original.usageCount}</span> },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => (
+        <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => handleUse(row.original)}>
+          <Copy className="size-3.5" />
+          Use
+        </Button>
+      ),
+    },
   ];
 
   return (

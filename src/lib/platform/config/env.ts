@@ -28,8 +28,17 @@ export const env = {
   // Notification channels — comma-separated list of enabled channels; "in-app" is the only real one.
   notificationChannels: readString("LEXORA_NOTIFICATION_CHANNELS", "in-app"),
 
-  // AI provider selection — "mock" is the only implemented one; named providers are inert placeholders.
-  aiProvider: readString("LEXORA_AI_PROVIDER", "mock") as "mock" | "openai" | "anthropic" | "gemini",
+  // AI provider selection — "mock" always works; "ollama" is real if a local Ollama
+  // instance is running (falls back to mock otherwise); cloud/other-local names are
+  // inert placeholders that always fall back to mock. See lib/platform/ai/index.ts.
+  aiProvider: readString("LEXORA_AI_PROVIDER", "mock") as
+    | "mock"
+    | "openai"
+    | "anthropic"
+    | "gemini"
+    | "ollama"
+    | "lm-studio"
+    | "llama-cpp",
 
   // Billing/payment provider selection — "mock" is the only implemented one.
   paymentProvider: readString("LEXORA_PAYMENT_PROVIDER", "mock") as "mock" | "stripe" | "razorpay",

@@ -7,6 +7,8 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Timeline } from "@/components/shared/timeline";
 import { AddNoteForm } from "@/components/clients/add-note-form";
 import { UpdateHearingDialog } from "@/components/hearings/update-hearing-dialog";
+import { MatterRisksPanel } from "@/components/matters/matter-risks-panel";
+import { MatterAssistantPanel } from "@/components/matters/matter-assistant-panel";
 import {
   HearingStatusPill,
   TaskStatusPill,
@@ -15,9 +17,10 @@ import {
   InvoiceStatusPill,
 } from "@/components/shared/status-pill";
 import { Clock, FileText, Gavel, CheckSquare, Users, StickyNote, BookOpen, Receipt as ReceiptIcon, Wallet, Activity, Pin } from "lucide-react";
-import { formatCurrency, formatDate, formatDateTime, formatTimeAgo, initials, formatMinutes } from "@/lib/format";
+import { formatCurrency, formatDate, formatDateTime, formatTimeAgo, initials } from "@/lib/format";
 import type { MatterDetail } from "@/features/matters/queries";
 import type { getRelatedResearch } from "@/features/matters/queries";
+import { buildMatterTimeline } from "@/features/timeline/build-matter-timeline";
 
 type ResearchArticle = Awaited<ReturnType<typeof getRelatedResearch>>[number];
 
@@ -46,6 +49,8 @@ export function MatterDetailTabs({
         <TabsTrigger value="expenses">Expenses ({matter.expenses.length})</TabsTrigger>
         <TabsTrigger value="invoices">Invoices ({matter.invoices.length})</TabsTrigger>
         <TabsTrigger value="activity">Activity</TabsTrigger>
+        <TabsTrigger value="risks">Risks</TabsTrigger>
+        <TabsTrigger value="assistant">Assistant</TabsTrigger>
       </TabsList>
 
       <TabsContent value="timeline">
@@ -244,6 +249,14 @@ export function MatterDetailTabs({
           emptyTitle="No activity recorded yet"
         />
       </TabsContent>
+
+      <TabsContent value="risks">
+        <MatterRisksPanel matter={matter} />
+      </TabsContent>
+
+      <TabsContent value="assistant">
+        <MatterAssistantPanel matter={matter} />
+      </TabsContent>
       </Tabs>
       <UpdateHearingDialog
         hearing={selectedHearing}
@@ -255,25 +268,7 @@ export function MatterDetailTabs({
 }
 
 function MatterTimeline({ matter }: { matter: MatterDetail }) {
-  type Event = { id: string; date: Date; label: string; description: string };
-  const events: Event[] = [
-    { id: "opened", date: matter.openedDate, label: "Matter opened", description: matter.title },
-    ...matter.hearings.map((h) => ({ id: `hearing-${h.id}`, date: h.scheduledAt, label: "Hearing", description: `${h.hearingType} — ${h.courtName}` })),
-    ...matter.tasks.filter((t) => t.completedAt).map((t) => ({ id: `task-${t.id}`, date: t.completedAt as Date, label: "Task completed", description: t.title })),
-    ...matter.documents.map((d) => ({ id: `doc-${d.id}`, date: d.createdAt, label: "Document uploaded", description: d.name })),
-    ...matter.invoices.map((i) => ({ id: `inv-${i.id}`, date: i.issueDate, label: "Invoice issued", description: `${i.invoiceNumber} · ${formatCurrency(i.total)}` })),
-    ...matter.notes.map((n) => ({ id: `note-${n.id}`, date: n.createdAt, label: "Note added", description: n.body })),
-  ].sort((a, b) => b.date.getTime() - a.date.getTime());
-
-  if (matter.timeEntries.length > 0) {
-    const totalMinutes = matter.timeEntries.reduce((sum, t) => sum + t.minutes, 0);
-    events.unshift({
-      id: "time-summary",
-      date: matter.timeEntries[0].date,
-      label: "Time logged",
-      description: `${formatMinutes(totalMinutes)} logged across ${matter.timeEntries.length} entries`,
-    });
-  }
+  const events = buildMatterTimeline(matter);
 
   if (events.length === 0) {
     return <EmptyState icon={Clock} title="No activity yet" />;
@@ -299,3 +294,4 @@ function MatterTimeline({ matter }: { matter: MatterDetail }) {
     </div>
   );
 }
+

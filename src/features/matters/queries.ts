@@ -78,3 +78,8 @@ export async function getMatterFormOptions() {
   ]);
   return { clients, practiceAreas, attorneys };
 }
+
+/** Lightweight id/title pairs for a matter picker — e.g. linking a Document Generator draft to a matter without fetching full matter records. */
+export async function getMatterOptions() {
+  return prisma.matter.findMany({ select: { id: true, title: true }, orderBy: { title: "asc" } });
+}

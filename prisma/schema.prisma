@@ -319,28 +319,34 @@ model User {
   clientId          String?
   portalClient      Client?    @relation("PortalUser", fields: [clientId], references: [id])
 
-  matterMemberships   MatterTeamMember[]
-  responsibleMatters  Matter[]           @relation("ResponsibleAttorney")
-  relationshipClients Client[]           @relation("RelationshipManager")
-  assignedTasks       Task[]             @relation("TaskAssignee")
-  createdTasks        Task[]             @relation("TaskCreator")
-  documentsUploaded   DocumentFile[]
-  documentsReviewed   DocumentFile[]     @relation("DocumentReviewer")
-  documentsApproved   DocumentFile[]     @relation("DocumentApprover")
-  documentVersions    DocumentVersion[]
-  documentComments    DocumentComment[]
-  notes               Note[]
-  timeEntries         TimeEntry[]
-  expensesSubmitted   Expense[]
-  communicationLogs   CommunicationLog[]
-  announcements       Announcement[]
-  activityLogs        ActivityLog[]
-  knowledgeArticles   KnowledgeArticle[]
-  sessions            Session[]
-  notifications       Notification[]
-  leaveRequests       LeaveRequest[]     @relation("LeaveRequester")
-  leaveApprovals      LeaveRequest[]     @relation("LeaveApprover")
-  attendanceRecords   AttendanceRecord[]
+  matterMemberships          MatterTeamMember[]
+  responsibleMatters         Matter[]                   @relation("ResponsibleAttorney")
+  relationshipClients        Client[]                   @relation("RelationshipManager")
+  assignedTasks              Task[]                     @relation("TaskAssignee")
+  createdTasks               Task[]                     @relation("TaskCreator")
+  documentsUploaded          DocumentFile[]
+  documentsReviewed          DocumentFile[]             @relation("DocumentReviewer")
+  documentsApproved          DocumentFile[]             @relation("DocumentApprover")
+  documentVersions           DocumentVersion[]
+  documentComments           DocumentComment[]
+  notes                      Note[]
+  timeEntries                TimeEntry[]
+  expensesSubmitted          Expense[]
+  communicationLogs          CommunicationLog[]
+  announcements              Announcement[]
+  activityLogs               ActivityLog[]
+  knowledgeArticles          KnowledgeArticle[]
+  sessions                   Session[]
+  notifications              Notification[]
+  leaveRequests              LeaveRequest[]             @relation("LeaveRequester")
+  leaveApprovals             LeaveRequest[]             @relation("LeaveApprover")
+  attendanceRecords          AttendanceRecord[]
+  generatedDocumentsCreated  GeneratedDocument[]        @relation("GeneratedDocumentCreator")
+  generatedDocumentsReviewed GeneratedDocument[]        @relation("GeneratedDocumentReviewer")
+  generatedDocumentsApproved GeneratedDocument[]        @relation("GeneratedDocumentApprover")
+  generatedDocumentVersions  GeneratedDocumentVersion[]
+  researchBookmarks          ResearchBookmark[]
+  researchNotes              ResearchNote[]
 
   createdAt DateTime @default(now())
 }
@@ -384,20 +390,21 @@ model Client {
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 
-  matters           Matter[]
-  invoices          Invoice[]
-  payments          Payment[]
-  documents         DocumentFile[]
-  documentFolders   DocumentFolder[]
-  notes             Note[]
-  meetings          Meeting[]
-  communicationLogs CommunicationLog[]
-  retainers         Retainer[]
-  expenses          Expense[]
-  activityLogs      ActivityLog[]
-  companies         Company[]
-  contacts          Contact[]
-  portalUsers       User[]             @relation("PortalUser")
+  matters            Matter[]
+  invoices           Invoice[]
+  payments           Payment[]
+  documents          DocumentFile[]
+  documentFolders    DocumentFolder[]
+  notes              Note[]
+  meetings           Meeting[]
+  communicationLogs  CommunicationLog[]
+  retainers          Retainer[]
+  expenses           Expense[]
+  activityLogs       ActivityLog[]
+  companies          Company[]
+  contacts           Contact[]
+  portalUsers        User[]              @relation("PortalUser")
+  generatedDocuments GeneratedDocument[]
 }
 
 model Matter {
@@ -425,21 +432,23 @@ model Matter {
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 
-  team              MatterTeamMember[]
-  hearings          Hearing[]
-  tasks             Task[]
-  documents         DocumentFile[]
-  documentFolders   DocumentFolder[]
-  notes             Note[]
-  meetings          Meeting[]
-  communicationLogs CommunicationLog[]
-  invoices          Invoice[]
-  expenses          Expense[]
-  retainers         Retainer[]
-  timeEntries       TimeEntry[]
-  activityLogs      ActivityLog[]
-  courtCase         CourtCase?
-  notifications     Notification[]
+  team               MatterTeamMember[]
+  hearings           Hearing[]
+  tasks              Task[]
+  documents          DocumentFile[]
+  documentFolders    DocumentFolder[]
+  notes              Note[]
+  meetings           Meeting[]
+  communicationLogs  CommunicationLog[]
+  invoices           Invoice[]
+  expenses           Expense[]
+  retainers          Retainer[]
+  timeEntries        TimeEntry[]
+  activityLogs       ActivityLog[]
+  courtCase          CourtCase?
+  notifications      Notification[]
+  generatedDocuments GeneratedDocument[]
+  researchNotes      ResearchNote[]
 }
 
 model MatterTeamMember {
@@ -513,6 +522,8 @@ model CourtCase {
   judge           String?
   stage           CaseStage @default(FILING)
   nextHearingDate DateTime?
+  /// Statute-of-limitations deadline for this case — feeds the Risk Analysis Engine's upcoming-limitation-period rule.
+  limitationDate  DateTime?
   createdAt       DateTime  @default(now())
 }
 
@@ -583,8 +594,9 @@ model DocumentFile {
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 
-  versions DocumentVersion[]
-  comments DocumentComment[]
+  versions                DocumentVersion[]
+  comments                DocumentComment[]
+  generatedDocumentSource GeneratedDocument?
 }
 
 model DocumentComment {
@@ -621,15 +633,131 @@ model Template {
   createdAt   DateTime         @default(now())
 }
 
+enum ClauseRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model Clause {
-  id         String   @id @default(cuid())
-  title      String
-  category   String
-  body       String
-  tags       String?
-  isFavorite Boolean  @default(false)
-  usageCount Int      @default(0)
-  createdAt  DateTime @default(now())
+  id               String          @id @default(cuid())
+  title            String
+  category         String
+  body             String
+  tags             String?
+  jurisdiction     String?
+  language         String          @default("en")
+  riskLevel        ClauseRiskLevel @default(LOW)
+  /// Comma-joined Clause ids this clause is commonly paired/contrasted with — same convention as `tags`.
+  relatedClauseIds String?
+  isFavorite       Boolean         @default(false)
+  usageCount       Int             @default(0)
+  lastUsedAt       DateTime?
+  createdAt        DateTime        @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// AI Document Generator — structured-input document drafting, independent of
+// the file-based Template model above (which stores uploaded template files,
+// not fillable field schemas). See docs/DOCUMENT_GENERATION.md.
+// ─────────────────────────────────────────────────────────────────────────
+
+enum GeneratedDocumentType {
+  LEGAL_NOTICE
+  NDA
+  EMPLOYMENT_AGREEMENT
+  SERVICE_AGREEMENT
+  VENDOR_AGREEMENT
+  SHAREHOLDER_AGREEMENT
+  POWER_OF_ATTORNEY
+  AFFIDAVIT
+  WILL
+  LEASE_AGREEMENT
+  PARTNERSHIP_DEED
+  PRIVACY_POLICY
+  TERMS_AND_CONDITIONS
+  GENERAL_CONTRACT
+  CORPORATE_RESOLUTION
+}
+
+enum GeneratedDocumentStatus {
+  DRAFT
+  IN_REVIEW
+  REVISION_REQUESTED
+  APPROVED
+  EXPORTED
+}
+
+model GeneratedDocument {
+  id                 String                  @id @default(cuid())
+  documentType       GeneratedDocumentType
+  title              String
+  status             GeneratedDocumentStatus @default(DRAFT)
+  /// JSON-encoded structured form input the document was generated from — the source of truth for regeneration.
+  formData           String
+  /// Current generated text (plain text/Markdown) — mirrors the latest GeneratedDocumentVersion.
+  content            String
+  version            Int                     @default(1)
+  matterId           String?
+  matter             Matter?                 @relation(fields: [matterId], references: [id], onDelete: SetNull)
+  clientId           String?
+  client             Client?                 @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  /// Populated when the doc type's structured fields include an end/expiry date — feeds the Risk Analysis Engine.
+  expiresAt          DateTime?
+  createdById        String
+  createdBy          User                    @relation("GeneratedDocumentCreator", fields: [createdById], references: [id])
+  reviewedById       String?
+  reviewedBy         User?                   @relation("GeneratedDocumentReviewer", fields: [reviewedById], references: [id])
+  approvedById       String?
+  approvedBy         User?                   @relation("GeneratedDocumentApprover", fields: [approvedById], references: [id])
+  revisionNote       String?
+  /// Set once exported into the real Documents module — see features/document-generator/actions.ts's exportGeneratedDocument.
+  exportedDocumentId String?                 @unique
+  exportedDocument   DocumentFile?           @relation(fields: [exportedDocumentId], references: [id])
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  versions GeneratedDocumentVersion[]
+}
+
+model GeneratedDocumentVersion {
+  id                  String            @id @default(cuid())
+  generatedDocumentId String
+  generatedDocument   GeneratedDocument @relation(fields: [generatedDocumentId], references: [id], onDelete: Cascade)
+  version             Int
+  content             String
+  note                String?
+  createdById         String
+  createdBy           User              @relation(fields: [createdById], references: [id])
+  createdAt           DateTime          @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Legal Research Assistant — bookmarking + a research notebook over the
+// existing KnowledgeArticle-backed Research module. See docs/KNOWLEDGE_ENGINE.md.
+// ─────────────────────────────────────────────────────────────────────────
+
+model ResearchBookmark {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articleId String
+  article   KnowledgeArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+
+  @@unique([userId, articleId])
+}
+
+model ResearchNote {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articleId String?
+  article   KnowledgeArticle? @relation(fields: [articleId], references: [id], onDelete: SetNull)
+  matterId  String?
+  matter    Matter?           @relation(fields: [matterId], references: [id], onDelete: SetNull)
+  body      String
+  createdAt DateTime          @default(now())
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -800,16 +928,21 @@ model CourtListEntry {
 }
 
 model KnowledgeArticle {
-  id          String   @id @default(cuid())
-  title       String
-  category    String
-  summary     String?
-  body        String
-  tags        String?
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  publishedAt DateTime @default(now())
-  viewCount   Int      @default(0)
+  id                String   @id @default(cuid())
+  title             String
+  category          String
+  summary           String?
+  body              String
+  tags              String?
+  /// Comma-joined KnowledgeArticle ids — cross-references between related articles/precedents.
+  relatedArticleIds String?
+  authorId          String
+  author            User     @relation(fields: [authorId], references: [id])
+  publishedAt       DateTime @default(now())
+  viewCount         Int      @default(0)
+
+  bookmarks ResearchBookmark[]
+  notes     ResearchNote[]
 }
 
 model ActivityLog {

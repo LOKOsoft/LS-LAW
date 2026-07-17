@@ -26,7 +26,7 @@ export type RegionalConfig = {
 
 export type ProviderSelection = {
   storage: "local" | "s3" | "azure-blob" | "gcs";
-  ai: "mock" | "openai" | "anthropic" | "gemini";
+  ai: "mock" | "openai" | "anthropic" | "gemini" | "ollama" | "lm-studio" | "llama-cpp";
   payment: "mock" | "stripe" | "razorpay";
   cache: "memory" | "redis";
   log: "console" | "cloud";

@@ -85,5 +85,5 @@ export interface AIProvider
     SummarizationService,
     ClauseRecommendationService,
     MatterSummaryService {
-  readonly name: "mock" | "openai" | "anthropic" | "gemini";
+  readonly name: "mock" | "openai" | "anthropic" | "gemini" | "ollama" | "lm-studio" | "llama-cpp";
 }
