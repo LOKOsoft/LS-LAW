@@ -1,26 +1,20 @@
 "use client";
 
-import * as React from "react";
 import { ShieldCheck } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { auditLogColumns } from "@/features/audit-logs/columns";
 import type { AuditLogItem } from "@/features/audit-logs/queries";
+import { useTableFilters } from "@/hooks/use-table-filters";
 
 export function AuditLogsTable({ logs }: { logs: AuditLogItem[] }) {
-  const [search, setSearch] = React.useState("");
-
-  const filtered = React.useMemo(() => {
-    if (search.trim().length === 0) return logs;
-    const q = search.toLowerCase();
-    return logs.filter(
-      (l) =>
-        l.actor.name.toLowerCase().includes(q) ||
-        l.action.toLowerCase().includes(q) ||
-        (l.matter?.title.toLowerCase().includes(q) ?? false) ||
-        (l.client?.name.toLowerCase().includes(q) ?? false),
-    );
-  }, [logs, search]);
+  const { search, setSearch, filtered } = useTableFilters(logs, {
+    search: (l, q) =>
+      l.actor.name.toLowerCase().includes(q) ||
+      l.action.toLowerCase().includes(q) ||
+      (l.matter?.title.toLowerCase().includes(q) ?? false) ||
+      (l.client?.name.toLowerCase().includes(q) ?? false),
+  });
 
   return (
     <div>

@@ -10,20 +10,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { initials, formatDate } from "@/lib/format";
 import type { TeamMember } from "@/features/hr/queries";
+import { useTableFilters } from "@/hooks/use-table-filters";
 
 export function TeamTable({ members }: { members: TeamMember[] }) {
-  const [search, setSearch] = React.useState("");
-  const [role, setRole] = React.useState("ALL");
-
   const roles = React.useMemo(() => Array.from(new Set(members.map((m) => m.role))), [members]);
 
-  const filtered = React.useMemo(() => {
-    return members.filter((m) => {
-      const matchesSearch = search.trim().length === 0 || m.name.toLowerCase().includes(search.toLowerCase());
-      const matchesRole = role === "ALL" || m.role === role;
-      return matchesSearch && matchesRole;
-    });
-  }, [members, search, role]);
+  const { search, setSearch, filterValue: role, setFilterValue: setRole, filtered } = useTableFilters(members, {
+    search: (m, q) => m.name.toLowerCase().includes(q),
+    filter: (m, value) => m.role === value,
+  });
 
   const columns: ColumnDef<TeamMember>[] = [
     {

@@ -13,21 +13,17 @@ import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format";
 import { toggleTemplateFavorite } from "@/features/templates/actions";
 import type { TemplateItem } from "@/features/templates/queries";
+import { useTableFilters } from "@/hooks/use-table-filters";
 
 export function TemplatesTable({ templates }: { templates: TemplateItem[] }) {
-  const [search, setSearch] = React.useState("");
-  const [category, setCategory] = React.useState("ALL");
   const router = useRouter();
 
   const categories = React.useMemo(() => Array.from(new Set(templates.map((t) => t.category))), [templates]);
 
-  const filtered = React.useMemo(() => {
-    return templates.filter((t) => {
-      const matchesSearch = search.trim().length === 0 || t.name.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = category === "ALL" || t.category === category;
-      return matchesSearch && matchesCategory;
-    });
-  }, [templates, search, category]);
+  const { search, setSearch, filterValue: category, setFilterValue: setCategory, filtered } = useTableFilters(templates, {
+    search: (t, q) => t.name.toLowerCase().includes(q),
+    filter: (t, value) => t.category === value,
+  });
 
   async function handleToggle(id: string, next: boolean) {
     try {

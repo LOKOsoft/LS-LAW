@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Timeline } from "@/components/shared/timeline";
 import { AddNoteForm } from "@/components/clients/add-note-form";
 import {
   HearingStatusPill,
@@ -218,25 +219,20 @@ export function MatterDetailTabs({
       </TabsContent>
 
       <TabsContent value="activity">
-        {matter.activityLogs.length === 0 ? (
-          <EmptyState icon={Activity} title="No activity recorded yet" />
-        ) : (
-          <div className="space-y-3">
-            {matter.activityLogs.map((log) => (
-              <div key={log.id} className="flex items-start gap-3">
-                <Avatar className="size-7">
-                  <AvatarFallback className="text-[10px]">{initials(log.actor.name)}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground">
-                    <span className="font-medium">{log.actor.name}</span> <span className="text-muted-foreground">{log.action}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">{formatTimeAgo(log.createdAt)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <Timeline
+          items={matter.activityLogs.map((log) => ({
+            id: log.id,
+            actorName: log.actor.name,
+            timestamp: log.createdAt,
+            content: (
+              <>
+                <span className="font-medium">{log.actor.name}</span> <span className="text-muted-foreground">{log.action}</span>
+              </>
+            ),
+          }))}
+          emptyIcon={Activity}
+          emptyTitle="No activity recorded yet"
+        />
       </TabsContent>
     </Tabs>
   );

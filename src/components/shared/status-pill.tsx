@@ -85,6 +85,7 @@ const CLIENT_STATUS_TONE: Record<string, StatusTone> = {
   ACTIVE: "success",
   INACTIVE: "neutral",
   PROSPECT: "info",
+  ARCHIVED: "neutral",
 };
 
 const PRIORITY_TONE: Record<string, StatusTone> = {

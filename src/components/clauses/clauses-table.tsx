@@ -12,21 +12,17 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toggleClauseFavorite } from "@/features/clauses/actions";
 import type { ClauseItem } from "@/features/clauses/queries";
+import { useTableFilters } from "@/hooks/use-table-filters";
 
 export function ClausesTable({ clauses }: { clauses: ClauseItem[] }) {
-  const [search, setSearch] = React.useState("");
-  const [category, setCategory] = React.useState("ALL");
   const router = useRouter();
 
   const categories = React.useMemo(() => Array.from(new Set(clauses.map((c) => c.category))), [clauses]);
 
-  const filtered = React.useMemo(() => {
-    return clauses.filter((c) => {
-      const matchesSearch = search.trim().length === 0 || c.title.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = category === "ALL" || c.category === category;
-      return matchesSearch && matchesCategory;
-    });
-  }, [clauses, search, category]);
+  const { search, setSearch, filterValue: category, setFilterValue: setCategory, filtered } = useTableFilters(clauses, {
+    search: (c, q) => c.title.toLowerCase().includes(q),
+    filter: (c, value) => c.category === value,
+  });
 
   async function handleToggle(id: string, next: boolean) {
     try {

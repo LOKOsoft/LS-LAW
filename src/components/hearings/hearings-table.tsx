@@ -1,28 +1,21 @@
 "use client";
 
-import * as React from "react";
 import { Gavel } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { hearingColumns } from "@/features/hearings/columns";
 import type { HearingListItem } from "@/features/hearings/queries";
+import { useTableFilters } from "@/hooks/use-table-filters";
 
 export function HearingsTable({ hearings }: { hearings: HearingListItem[] }) {
-  const [search, setSearch] = React.useState("");
-  const [status, setStatus] = React.useState("ALL");
-
-  const filtered = React.useMemo(() => {
-    return hearings.filter((h) => {
-      const matchesSearch =
-        search.trim().length === 0 ||
-        h.hearingType.toLowerCase().includes(search.toLowerCase()) ||
-        h.courtName.toLowerCase().includes(search.toLowerCase()) ||
-        h.matter.title.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = status === "ALL" || h.status === status;
-      return matchesSearch && matchesStatus;
-    });
-  }, [hearings, search, status]);
+  const { search, setSearch, filterValue: status, setFilterValue: setStatus, filtered } = useTableFilters(hearings, {
+    search: (h, q) =>
+      h.hearingType.toLowerCase().includes(q) ||
+      h.courtName.toLowerCase().includes(q) ||
+      h.matter.title.toLowerCase().includes(q),
+    filter: (h, value) => h.status === value,
+  });
 
   return (
     <div>

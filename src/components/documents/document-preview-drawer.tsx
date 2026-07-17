@@ -1,12 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Download, FileText, History } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Download, History } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { DocumentStatusPill } from "@/components/shared/status-pill";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatBytes, formatDate, formatTimeAgo } from "@/lib/format";
 import type { DocumentListItem } from "@/features/documents/queries";
+
+// pdfjs-dist touches browser-only globals (DOMMatrix) at module-evaluation time,
+// which crashes SSR — must be loaded client-only.
+const DocumentViewer = dynamic(
+  () => import("@/components/documents/document-viewer").then((mod) => mod.DocumentViewer),
+  { ssr: false, loading: () => <Skeleton className="aspect-[4/3] w-full rounded-lg" /> },
+);
 
 export function DocumentPreviewDrawer({
   document,
@@ -28,12 +37,11 @@ export function DocumentPreviewDrawer({
         </SheetHeader>
         {document ? (
           <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
-            <div className="flex aspect-[4/3] items-center justify-center rounded-lg border border-dashed border-border bg-muted/30">
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <FileText className="size-10" />
-                <p className="text-xs">Inline preview available for supported file types</p>
-              </div>
-            </div>
+            <DocumentViewer
+              fileUrl={`/api/storage/${document.storagePath.replace(/^storage\//, "")}`}
+              fileType={document.fileType}
+              fileName={document.name}
+            />
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <Field label="Type" value={document.fileType} />

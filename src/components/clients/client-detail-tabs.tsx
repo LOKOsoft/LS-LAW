@@ -5,10 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { MatterStatusPill, InvoiceStatusPill, DocumentStatusPill } from "@/components/shared/status-pill";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Timeline, type TimelineItem } from "@/components/shared/timeline";
 import { AddNoteForm } from "@/components/clients/add-note-form";
-import { Briefcase, Receipt, FileText, Clock, Users, StickyNote, MessageSquare, Pin, Mail, Phone, MessageCircle, FileSignature } from "lucide-react";
+import { Briefcase, Receipt, FileText, Clock, Users, StickyNote, MessageSquare, Pin, Mail, Phone, MessageCircle, FileSignature, ShieldCheck } from "lucide-react";
 import { formatCurrency, formatDate, formatDateTime, formatTimeAgo } from "@/lib/format";
-import type { ClientDetail } from "@/features/clients/queries";
+import type { ClientDetail, ClientActivityItem } from "@/features/clients/queries";
 
 const communicationIcon = { EMAIL: Mail, CALL: Phone, MEETING: Users, LETTER: FileSignature, SMS: MessageCircle } as const;
 
@@ -16,10 +17,12 @@ export function ClientDetailTabs({
   client,
   currentUserId,
   basePath = "/managing-partner",
+  activityLog = [],
 }: {
   client: ClientDetail;
   currentUserId: string;
   basePath?: string;
+  activityLog?: ClientActivityItem[];
 }) {
   return (
     <Tabs defaultValue="overview" className="gap-4">
@@ -32,6 +35,7 @@ export function ClientDetailTabs({
         <TabsTrigger value="meetings">Meetings ({client.meetings.length})</TabsTrigger>
         <TabsTrigger value="notes">Notes ({client.notes.length})</TabsTrigger>
         <TabsTrigger value="communication">Communication</TabsTrigger>
+        <TabsTrigger value="activity">Activity</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="space-y-4">
@@ -198,6 +202,26 @@ export function ClientDetailTabs({
             })}
           </div>
         )}
+      </TabsContent>
+
+      <TabsContent value="activity">
+        <Timeline
+          items={activityLog.map(
+            (log): TimelineItem => ({
+              id: log.id,
+              actorName: log.actor.name,
+              content: (
+                <>
+                  <span className="font-medium text-foreground">{log.actor.name}</span> {log.action}
+                </>
+              ),
+              timestamp: log.createdAt,
+            }),
+          )}
+          emptyIcon={ShieldCheck}
+          emptyTitle="No activity recorded"
+          emptyDescription="Every mutating action on this client's record will appear here."
+        />
       </TabsContent>
     </Tabs>
   );

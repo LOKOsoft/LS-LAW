@@ -1,11 +1,26 @@
-import { Mail, Phone, MapPin, Building2 } from "lucide-react";
+"use client";
+
+import type { ReactNode } from "react";
+import { Mail, Phone, MapPin, Building2, Printer, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ClientStatusPill } from "@/components/shared/status-pill";
 import { initials, formatCurrencyCompact, formatDate } from "@/lib/format";
 import type { ClientDetail } from "@/features/clients/queries";
 
-export function ClientHeader({ client }: { client: ClientDetail }) {
+async function shareClientProfile() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied", { description: "The client profile link is on your clipboard." });
+  } catch {
+    toast.error("Could not copy the link. Please copy it from the address bar.");
+  }
+}
+
+export function ClientHeader({ client, actions }: { client: ClientDetail; actions?: ReactNode }) {
   const totalBilled = client.invoices.reduce((sum, inv) => sum + inv.total, 0);
   const openMatters = client.matters.filter((m) => m.status === "ACTIVE" || m.status === "INTAKE").length;
 
@@ -42,6 +57,25 @@ export function ClientHeader({ client }: { client: ClientDetail }) {
               ) : null}
             </div>
           </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="Print client profile" onClick={() => window.print()}>
+                <Printer className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Print profile</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="Share client profile" onClick={() => void shareClientProfile()}>
+                <Share2 className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Copy share link</TooltipContent>
+          </Tooltip>
+          {actions}
         </div>
       </div>
 

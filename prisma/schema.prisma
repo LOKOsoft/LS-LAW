@@ -44,6 +44,7 @@ enum ClientStatus {
   ACTIVE
   INACTIVE
   PROSPECT
+  ARCHIVED
 }
 
 enum MatterStatus {

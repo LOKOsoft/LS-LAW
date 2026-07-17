@@ -143,6 +143,13 @@ const NAV_STRUCTURE: NavSectionDef[] = [
 
 export const ALL_MODULE_KEYS: ModuleKey[] = NAV_STRUCTURE.flatMap((s) => s.items.map((i) => i.key));
 
+const ALL_NAV_ITEMS: NavItem[] = NAV_STRUCTURE.flatMap((s) => s.items);
+
+/** Module key → nav label, keyed by the item's `path` slug (equal to its `ModuleKey` for every non-dashboard item). Used by `useBreadcrumbs`. */
+export const MODULE_LABELS: Record<string, string> = Object.fromEntries(
+  ALL_NAV_ITEMS.map((item) => [item.path || item.key, item.label]),
+);
+
 export const SENIOR_PARTNER_MODULE_KEYS: ModuleKey[] = ALL_MODULE_KEYS.filter(
   (key) => !["hr", "attendance", "leaves", "reports", "analytics", "settings", "audit-logs"].includes(key),
 );

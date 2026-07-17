@@ -9,7 +9,7 @@ export default async function AccountsClientsPage() {
   return (
     <div>
       <PageHeader title="Clients" description="Client directory and billing history across the firm." />
-      <ClientsTable clients={clients} basePath={ACCOUNTS_BASE} />
+      <ClientsTable clients={clients} basePath={ACCOUNTS_BASE} canManage={false} />
     </div>
   );
 }

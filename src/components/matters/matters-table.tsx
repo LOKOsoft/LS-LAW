@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Briefcase } from "lucide-react";
 import { DataTable } from "@/components/shared/data-table/data-table";
@@ -8,6 +7,7 @@ import { DataTableToolbar } from "@/components/shared/data-table/data-table-tool
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { matterColumns } from "@/features/matters/columns";
 import type { MatterListItem } from "@/features/matters/queries";
+import { useTableFilters } from "@/hooks/use-table-filters";
 
 export function MattersTable({
   matters,
@@ -17,20 +17,13 @@ export function MattersTable({
   basePath?: string;
 }) {
   const router = useRouter();
-  const [search, setSearch] = React.useState("");
-  const [status, setStatus] = React.useState("ALL");
-
-  const filtered = React.useMemo(() => {
-    return matters.filter((m) => {
-      const matchesSearch =
-        search.trim().length === 0 ||
-        m.title.toLowerCase().includes(search.toLowerCase()) ||
-        m.matterNumber.toLowerCase().includes(search.toLowerCase()) ||
-        m.client.name.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = status === "ALL" || m.status === status;
-      return matchesSearch && matchesStatus;
-    });
-  }, [matters, search, status]);
+  const { search, setSearch, filterValue: status, setFilterValue: setStatus, filtered } = useTableFilters(matters, {
+    search: (m, q) =>
+      m.title.toLowerCase().includes(q) ||
+      m.matterNumber.toLowerCase().includes(q) ||
+      m.client.name.toLowerCase().includes(q),
+    filter: (m, value) => m.status === value,
+  });
 
   return (
     <div>
