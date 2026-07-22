@@ -3,18 +3,7 @@ import { permissionService } from "@/lib/platform/auth/permission-service";
 import { localAuthProvider } from "@/lib/platform/auth/local-provider-instance";
 import type { PermissionCheck, UserContext } from "@/lib/platform/auth/types";
 
-/**
- * Guard placeholders for a future layer (API routes callable outside a
- * Server Component tree, or a hosted multi-tenant deployment) that can't
- * rely on every role's `layout.tsx` having already called `requireUser()`.
- *
- * Not wired into any existing route or Server Action — today's authorization
- * is `requireUser()` (redirect-based, in every role layout) plus nav-level
- * visibility. Wiring `withPermission` into each module's actions.ts call
- * sites is real follow-up work, not done here, since it would mean auditing
- * every action's call sites for how the caller's `UserContext` gets passed
- * in — out of scope for scaffolding.
- */
+/** Reads the current session through the real auth stack; throws `ForbiddenError` (not a redirect) so callers outside a page tree can handle it. */
 export async function requireCurrentUser(): Promise<UserContext> {
   const user = await localAuthProvider.getCurrentUser();
   if (!user) throw new ForbiddenError("No active session.");
@@ -27,7 +16,20 @@ export function assertPermission(user: UserContext, check: PermissionCheck): voi
   }
 }
 
-/** Wraps a Server Action so it throws `ForbiddenError` up front if the current user lacks the required access — opt-in, not applied automatically to any existing action. */
+/**
+ * Role-specific authorization layered on top of `requireUser()`. Page-level
+ * `requireUser()` (redirect-based, in every role layout) plus nav-level
+ * visibility establishes "is there a valid session"; `withPermission` adds
+ * "does this specific role have matrix-level access to this action" for
+ * Server Actions, which are independently-addressable POST endpoints once
+ * their reference is known and can't rely on the rendering page's own
+ * layout guard having run. Wired into `features/{matters,clients,clauses,
+ * templates,matter-assistant}/actions.ts` — see docs/TECHNICAL_DEBT.md item
+ * #20. `search/actions.ts`'s `globalSearch` deliberately isn't wrapped here:
+ * it aggregates across many modules with no single matching moduleKey, and
+ * would need per-result-type scoping to gate correctly, tracked as its own
+ * debt item rather than force-fit to one moduleKey.
+ */
 export function withPermission<Args extends unknown[], Result>(
   check: PermissionCheck,
   action: (...args: Args) => Promise<Result>,

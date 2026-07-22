@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { getAIProvider, AIPipeline } from "@/lib/platform/ai";
 import { requireUser } from "@/lib/auth/dal";
+import { withPermission } from "@/lib/platform/auth";
 
 /**
  * The Matter Assistant (Step 7): real data (pending tasks, deadlines, risks,
@@ -18,7 +19,7 @@ import { requireUser } from "@/lib/auth/dal";
  * Prisma/better-sqlite3 into the browser — see docs/AI_ARCHITECTURE.md.
  */
 
-export async function generateMatterSummary(matterId: string) {
+async function generateMatterSummaryImpl(matterId: string) {
   await requireUser();
   const matter = await prisma.matter.findUniqueOrThrow({
     where: { id: matterId },
@@ -33,7 +34,7 @@ export async function generateMatterSummary(matterId: string) {
   return provider.summarizeMatter(matterId, recentActivity);
 }
 
-export async function generateMeetingBrief(matterId: string, openItems: string[]) {
+async function generateMeetingBriefImpl(matterId: string, openItems: string[]) {
   await requireUser();
   const matter = await prisma.matter.findUniqueOrThrow({ where: { id: matterId }, select: { title: true } });
   const pipeline = new AIPipeline(getAIProvider());
@@ -43,3 +44,6 @@ export async function generateMeetingBrief(matterId: string, openItems: string[]
   });
   return result.parsed;
 }
+
+export const generateMatterSummary = withPermission({ moduleKey: "matter-assistant", action: "view" }, generateMatterSummaryImpl);
+export const generateMeetingBrief = withPermission({ moduleKey: "matter-assistant", action: "view" }, generateMeetingBriefImpl);

@@ -10,8 +10,9 @@ import { buildDefaultMatterTasks } from "@/lib/services/task-templates";
 import { assertMatterHasNoUnpaidInvoices, assertMatterHasNoPendingHearings } from "@/lib/services/validation";
 import { assertValidStageTransition, MATTER_STAGE_LABELS } from "@/lib/services/workflow";
 import { requireUser } from "@/lib/auth/dal";
+import { withPermission } from "@/lib/platform/auth";
 
-export async function createMatter(input: CreateMatterInput) {
+async function createMatterImpl(input: CreateMatterInput) {
   await requireUser();
   const data = createMatterSchema.parse(input);
 
@@ -87,8 +88,10 @@ export async function createMatter(input: CreateMatterInput) {
   return matter;
 }
 
+export const createMatter = withPermission({ moduleKey: "matters", action: "create" }, createMatterImpl);
+
 /** Moves a matter to the next stage in its pipeline, enforcing sequence and closure/archive business rules. */
-export async function advanceMatterStage(matterId: string, targetStage: MatterStage) {
+async function advanceMatterStageImpl(matterId: string, targetStage: MatterStage) {
   const actor = await requireUser();
   const actorId = actor.id;
   const matter = await prisma.matter.findUniqueOrThrow({ where: { id: matterId } });
@@ -131,6 +134,8 @@ export async function advanceMatterStage(matterId: string, targetStage: MatterSt
   return updated;
 }
 
+export const advanceMatterStage = withPermission({ moduleKey: "matters", action: "create" }, advanceMatterStageImpl);
+
 /** Closing/archiving are reachable from any active stage — they don't require walking the full pipeline, only the business-rule gate. */
 async function terminateMatter(matterId: string, actorId: string, targetStage: typeof MatterStage.CLOSURE | typeof MatterStage.ARCHIVE) {
   const matter = await prisma.matter.findUniqueOrThrow({ where: { id: matterId } });
@@ -166,12 +171,15 @@ async function terminateMatter(matterId: string, actorId: string, targetStage: t
   return updated;
 }
 
-export async function closeMatter(matterId: string) {
+async function closeMatterImpl(matterId: string) {
   const actor = await requireUser();
   return terminateMatter(matterId, actor.id, MatterStage.CLOSURE);
 }
 
-export async function archiveMatter(matterId: string) {
+async function archiveMatterImpl(matterId: string) {
   const actor = await requireUser();
   return terminateMatter(matterId, actor.id, MatterStage.ARCHIVE);
 }
+
+export const closeMatter = withPermission({ moduleKey: "matters", action: "create" }, closeMatterImpl);
+export const archiveMatter = withPermission({ moduleKey: "matters", action: "create" }, archiveMatterImpl);

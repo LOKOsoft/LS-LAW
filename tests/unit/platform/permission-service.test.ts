@@ -25,4 +25,17 @@ describe("platform/auth/permission-service", () => {
   it("denies Client Portal users any staff-module access", () => {
     expect(service.can(userWithRole(Role.CLIENT), { moduleKey: "dashboard", action: "view" })).toBe(false);
   });
+
+  // Item #20 (docs/TECHNICAL_DEBT.md): withPermission() wraps mergeClients/bulkImportClients
+  // at "full", and generateMatterSummary/generateMeetingBrief at the synthetic
+  // "matter-assistant" key mapped to the matrix's "AI Assistant" row.
+  it("only gives Managing Partner full access to clients (merge/bulk-import gate)", () => {
+    expect(service.can(userWithRole(Role.MANAGING_PARTNER), { moduleKey: "clients", action: "full" })).toBe(true);
+    expect(service.can(userWithRole(Role.SENIOR_PARTNER), { moduleKey: "clients", action: "full" })).toBe(false);
+  });
+
+  it("maps the synthetic matter-assistant key to the AI Assistant matrix row", () => {
+    expect(service.can(userWithRole(Role.PARALEGAL), { moduleKey: "matter-assistant", action: "view" })).toBe(true);
+    expect(service.can(userWithRole(Role.RECEPTION), { moduleKey: "matter-assistant", action: "full" })).toBe(false);
+  });
 });

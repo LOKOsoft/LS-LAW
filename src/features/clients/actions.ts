@@ -18,8 +18,9 @@ import {
 import { findSimilarClients } from "@/features/clients/queries";
 import { assertClientHasNoActiveMatters } from "@/lib/services/validation";
 import { requireUser } from "@/lib/auth/dal";
+import { withPermission } from "@/lib/platform/auth";
 
-export async function checkSimilarClientNames(name: string) {
+async function checkSimilarClientNamesImpl(name: string) {
   await requireUser();
   return findSimilarClients(name);
 }
@@ -29,8 +30,8 @@ async function nextClientNumber() {
   return `CLT-${String(count + 1).padStart(4, "0")}`;
 }
 
-export async function createClient(input: CreateClientInput) {
-  await requireUser();
+async function createClientImpl(input: CreateClientInput) {
+  const actor = await requireUser();
   const data = createClientSchema.parse(input);
   const clientNumber = await nextClientNumber();
 
@@ -56,7 +57,7 @@ export async function createClient(input: CreateClientInput) {
       entityType: "CLIENT",
       entityId: client.id,
       clientId: client.id,
-      actorId: data.relationshipManagerId,
+      actorId: actor.id,
     },
   });
 
@@ -64,7 +65,7 @@ export async function createClient(input: CreateClientInput) {
   return client;
 }
 
-export async function updateClient(clientId: string, input: UpdateClientInput) {
+async function updateClientImpl(clientId: string, input: UpdateClientInput) {
   const actor = await requireUser();
   const actorId = actor.id;
   const data = updateClientSchema.parse(input);
@@ -103,7 +104,7 @@ export async function updateClient(clientId: string, input: UpdateClientInput) {
   return client;
 }
 
-export async function reassignRelationshipManager(clientId: string, managerId: string) {
+async function reassignRelationshipManagerImpl(clientId: string, managerId: string) {
   const actor = await requireUser();
   const actorId = actor.id;
   const client = await prisma.client.update({ where: { id: clientId }, data: { relationshipManagerId: managerId } });
@@ -122,7 +123,7 @@ export async function reassignRelationshipManager(clientId: string, managerId: s
   return client;
 }
 
-export async function archiveClient(clientId: string) {
+async function archiveClientImpl(clientId: string) {
   const actor = await requireUser();
   const actorId = actor.id;
   await assertClientHasNoActiveMatters(clientId);
@@ -142,7 +143,7 @@ export async function archiveClient(clientId: string) {
   return client;
 }
 
-export async function restoreClient(clientId: string) {
+async function restoreClientImpl(clientId: string) {
   const actor = await requireUser();
   const actorId = actor.id;
   const client = await prisma.client.update({ where: { id: clientId }, data: { status: "ACTIVE" } });
@@ -161,7 +162,7 @@ export async function restoreClient(clientId: string) {
   return client;
 }
 
-export async function mergeClients(input: MergeClientsInput) {
+async function mergeClientsImpl(input: MergeClientsInput) {
   const actor = await requireUser();
   const actorId = actor.id;
   const { primaryClientId, duplicateClientId } = mergeClientsSchema.parse(input);
@@ -198,7 +199,7 @@ export async function mergeClients(input: MergeClientsInput) {
   return prisma.client.findUnique({ where: { id: primaryClientId } });
 }
 
-export async function bulkImportClients(rows: ImportClientRow[]) {
+async function bulkImportClientsImpl(rows: ImportClientRow[]) {
   const actor = await requireUser();
   const actorId = actor.id;
   const parsedRows = rows.map((row) => importClientRowSchema.parse(row));
@@ -240,7 +241,7 @@ export async function bulkImportClients(rows: ImportClientRow[]) {
   return created;
 }
 
-export async function createNote(input: CreateNoteInput) {
+async function createNoteImpl(input: CreateNoteInput) {
   const actor = await requireUser();
   const data = createNoteSchema.parse(input);
   const note = await prisma.note.create({
@@ -255,3 +256,16 @@ export async function createNote(input: CreateNoteInput) {
   revalidatePath("/", "layout");
   return note;
 }
+
+export const checkSimilarClientNames = withPermission({ moduleKey: "clients", action: "view" }, checkSimilarClientNamesImpl);
+export const createClient = withPermission({ moduleKey: "clients", action: "create" }, createClientImpl);
+export const updateClient = withPermission({ moduleKey: "clients", action: "create" }, updateClientImpl);
+export const reassignRelationshipManager = withPermission({ moduleKey: "clients", action: "create" }, reassignRelationshipManagerImpl);
+export const archiveClient = withPermission({ moduleKey: "clients", action: "create" }, archiveClientImpl);
+export const restoreClient = withPermission({ moduleKey: "clients", action: "create" }, restoreClientImpl);
+// Matrix gives "full" (F) access on Clients / Companies / Contacts to Managing Partner only —
+// merge and bulk-import are the two Clients actions the debt register flags as needing the
+// strictest tier, so they're gated at "full" rather than "create" like ordinary CRUD.
+export const mergeClients = withPermission({ moduleKey: "clients", action: "full" }, mergeClientsImpl);
+export const bulkImportClients = withPermission({ moduleKey: "clients", action: "full" }, bulkImportClientsImpl);
+export const createNote = withPermission({ moduleKey: "notes", action: "create" }, createNoteImpl);

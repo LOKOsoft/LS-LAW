@@ -1,12 +1,11 @@
 import { Role } from "@/generated/prisma/client";
 import { PERMISSION_MATRIX, PERMISSION_ROLES, type AccessLevel } from "@/lib/constants/permission-matrix";
-import type { ModuleKey } from "@/lib/constants/nav";
-import type { PermissionCheck, PermissionService, UserContext } from "@/lib/platform/auth/types";
+import type { PermissionCheck, PermissionModuleKey, PermissionService, UserContext } from "@/lib/platform/auth/types";
 
 // permission-matrix.ts is keyed by row-per-module with a human-readable module label,
 // not the same ModuleKey union nav.ts uses. This maps the subset that correspond
 // 1:1 so `can()` can do a real lookup instead of just approximating from nav visibility.
-const MODULE_KEY_TO_MATRIX_LABEL: Partial<Record<ModuleKey, string>> = {
+const MODULE_KEY_TO_MATRIX_LABEL: Partial<Record<PermissionModuleKey, string>> = {
   dashboard: "Dashboard",
   clients: "Clients / Companies / Contacts",
   companies: "Clients / Companies / Contacts",
@@ -34,6 +33,7 @@ const MODULE_KEY_TO_MATRIX_LABEL: Partial<Record<ModuleKey, string>> = {
   notifications: "Notifications",
   settings: "Settings / Firm Configuration",
   "audit-logs": "Audit Logs",
+  "matter-assistant": "AI Assistant",
 };
 
 const ROLE_TO_MATRIX_COLUMN: Record<Role, number> = {
@@ -64,7 +64,7 @@ const REQUIRED_RANK: Record<PermissionCheck["action"], number> = { view: 1, crea
  * re-deriving the matrix lookup by hand.
  */
 export class LocalPermissionService implements PermissionService {
-  accessLevel(user: UserContext, moduleKey: ModuleKey): AccessLevel {
+  accessLevel(user: UserContext, moduleKey: PermissionModuleKey): AccessLevel {
     if (user.role === Role.CLIENT) return "—";
     const label = MODULE_KEY_TO_MATRIX_LABEL[moduleKey];
     const column = ROLE_TO_MATRIX_COLUMN[user.role];

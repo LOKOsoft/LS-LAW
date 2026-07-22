@@ -20,8 +20,16 @@ export interface SessionContext {
   expiresAt: Date;
 }
 
+/**
+ * `ModuleKey` is nav-routed modules only (it backs `buildNavSections`). The
+ * permission matrix has a few rows — "AI Assistant" — with no corresponding
+ * navigable route, so permission checks accept this wider key without
+ * stretching `ModuleKey`'s meaning.
+ */
+export type PermissionModuleKey = ModuleKey | "matter-assistant";
+
 export interface PermissionCheck {
-  moduleKey: ModuleKey;
+  moduleKey: PermissionModuleKey;
   /** "view" maps to the matrix's V/C/F tiers all being sufficient; "create" requires C or F; "full" requires F. */
   action: "view" | "create" | "full";
 }
@@ -35,7 +43,7 @@ export interface AuthProvider {
 /** What a pluggable permission/authorization service must expose. */
 export interface PermissionService {
   can(user: UserContext, check: PermissionCheck): boolean;
-  accessLevel(user: UserContext, moduleKey: ModuleKey): AccessLevel;
+  accessLevel(user: UserContext, moduleKey: PermissionModuleKey): AccessLevel;
 }
 
 export type { Role, ModuleKey, AccessLevel };

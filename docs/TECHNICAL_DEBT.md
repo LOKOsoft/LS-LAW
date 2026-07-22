@@ -449,21 +449,83 @@ UI, behind `ConfirmDialog` per the established pattern.
 
 ---
 
-### 20. Role-specific `withPermission()` checks on top of the new session checks
+### 20. Role-specific `withPermission()` checks on top of the new session checks — FIXED
 
 **Problem.** Item #1's fix requires *a* valid session on the six
 previously-unprotected action files, but doesn't yet restrict *which*
 role may call each one (e.g. today any authenticated role can merge or
 bulk-import clients, not just Managing Partner/Senior Partner).
 
-**Recommendation.** Assign the appropriate `PermissionCheck` per action
-using the already-built `withPermission()` guard, module by module.
+**Fix applied.** Wrapped every exported action in `features/{matters,
+clients,clauses,templates,matter-assistant}/actions.ts` with the
+already-built `withPermission()` guard (`src/lib/platform/auth/guards.ts`),
+each given a `PermissionCheck` read directly off the existing F/C/V/—
+matrix in `permission-matrix.ts` (the same data Settings already renders,
+so enforcement now matches what the UI claims):
 
-**Priority.** High (follow-up to a Critical fix already applied).
-**Estimated effort.** Small–Medium (1–2 days).
-**Dependencies.** None — guard function already exists and is proven
-working (used internally by nothing yet, but its logic mirrors the
-already-working `permissionService.can()` matrix).
+- `matters`: `createMatter`/`advanceMatterStage`/`closeMatter`/
+  `archiveMatter` all gated at `{matters, create}` — close/archive are the
+  same stage-transition machinery as advance, just a convenience wrapper,
+  so they get the same tier rather than an invented stricter one.
+- `clients`: `checkSimilarClientNames` at `{clients, view}` (read-only);
+  `createClient`/`updateClient`/`reassignRelationshipManager`/
+  `archiveClient`/`restoreClient` at `{clients, create}`; `mergeClients`/
+  `bulkImportClients` at `{clients, full}` — the matrix gives `full` (F) on
+  Clients to Managing Partner only, so these two resolve to MP-only, not
+  "MP or SP" as this item's own original wording loosely suggested. If
+  Senior Partner should also merge/bulk-import, that's a one-cell change
+  to `permission-matrix.ts` (bump Senior Partner's Clients cell from `C`
+  to `F`), not a code change — a product decision, not made here.
+  `createNote` moved to `{notes, create}` instead of `{clients, create}`
+  since it's conceptually a Notes-module write, and the matrix's Notes row
+  has different role cutoffs than Clients.
+- `clauses`/`templates`: `toggleClauseFavorite`/`recordClauseUsage`/
+  `toggleTemplateFavorite` at `{clause-library, view}` /
+  `{template-library, view}` — personal, low-risk actions; `view` mainly
+  defense-in-depth (blocks the roles with zero Template/Clause Library
+  access, e.g. Reception/Accounts/HR).
+- `matter-assistant`: `generateMatterSummary`/`generateMeetingBrief` at a
+  new synthetic `matter-assistant` permission key (see below) mapped to
+  the matrix's existing "AI Assistant" row, `view` tier.
+- `search`'s `globalSearch` deliberately **not** wrapped — it aggregates
+  across nine entity types with no single matching `moduleKey`, and
+  correctly gating it needs per-result-type scoping (filter each result
+  category by that category's own module permission), which is a bigger,
+  separate change. Left session-only (already covered by item #1);
+  documented as new item #22 below instead of forcing it onto one
+  arbitrary moduleKey.
+
+**Supporting change — synthetic `matter-assistant` permission key.**
+`ModuleKey` (nav.ts) is nav-route-backed and has no entry for the Matter
+Assistant panel (it's embedded in the matter detail page, not its own
+route), but the permission matrix has a real "AI Assistant" row. Rather
+than add a fake nav entry to make it fit, `PermissionCheck.moduleKey`'s
+type was widened to `PermissionModuleKey = ModuleKey | "matter-assistant"`
+(`src/lib/platform/auth/types.ts`), with the matching matrix-label mapping
+added in `permission-service.ts`. `ModuleKey` itself and `nav.ts` are
+unchanged.
+
+**Also fixed in the same pass, same file, same theme (audit-trail
+integrity — item #1's exact concern):** `clients/actions.ts`'s
+`createClient` logged `activityLog.actorId` as the caller-supplied
+`relationshipManagerId` rather than the authenticated actor — a
+client-facing form field being used as the audit "who did this" value, so
+a caller could attribute a client-creation event to any user id by
+picking them as relationship manager. Item #1's original fix pass missed
+this one call site (every other action in the file already derived
+`actorId` from `requireUser()`). Now derives `actorId: actor.id` like the
+rest of the file.
+
+**Verified.** `npx tsc --noEmit`, `eslint`, full unit + integration suite
+(43 unit + 2 integration, including two new permission-service cases
+covering the `clients`/`matter-assistant` gates specifically), a
+production build, and a live Playwright smoke test against the running
+dev server (Managing Partner: create a client through the real form,
+view the Matters list) — both still succeed with the new gates in place,
+confirming no regression on the legitimate path.
+
+**Priority.** High — **FIXED**.
+**Dependencies.** None.
 
 ---
 
@@ -484,29 +546,61 @@ owner.
 
 ---
 
+### 22. `globalSearch` returns results across modules the caller may not have access to
+
+**Problem.** `search/actions.ts`'s `globalSearch` is session-gated (item
+#1) but not role-gated: it queries and returns matches across clients,
+matters, documents, hearings, invoices, tasks, notes, employees, and
+companies regardless of whether the caller's role has any matrix access
+to that entity type — e.g. a role with `—` (no access) on
+Billing/Invoices could still find an invoice number through search.
+
+**Reason it exists.** Global search predates the permission-matrix
+enforcement work; no single `moduleKey` covers a cross-entity aggregate
+query, so it couldn't be wrapped in `withPermission()` the way the other
+five files were (item #20).
+
+**Recommendation.** Filter each result category by that category's own
+`moduleKey` access (e.g. skip the `invoices` query/result entirely if
+`permissionService.accessLevel(user, "billing") === "—"`), rather than
+gating the whole function behind one key.
+
+**Priority.** Medium. **Estimated effort.** Small (1 day — one
+`permissionService.accessLevel()` check per result category).
+**Dependencies.** None.
+
+---
+
 ## Elimination roadmap
 
-1. **Done, this pass:** items #1–#3 (Critical) — session-level auth
+1. **Done, an earlier pass:** items #1–#3 (Critical) — session-level auth
    wiring on the six action files, the storage route, and mobile
    navigation. Fixed, verified (typecheck, lint, full test suite,
    production build, live browser smoke test), no regressions found.
-2. **Immediate next:** items #20–#21 — the role-specific and ownership-
-   scoping refinements on top of the two auth fixes just applied. These
-   were descoped from the Critical fixes deliberately (session-required
-   is unambiguous and safe to ship immediately; role/ownership rules need
-   a product decision per action and shouldn't be guessed at speed).
-3. **Next sprint:** items #4–#9 (High) — billing/matter lifecycle
+2. **Done, this pass:** item #20 — role-specific `withPermission()` checks
+   layered on top of item #1's session checks, across all five action
+   files that have a natural matrix `moduleKey` mapping. Fixed, verified
+   (typecheck, lint, full test suite plus two new permission-service unit
+   cases, production build, live Playwright smoke test). Surfaced two new
+   items in the process: #22 (`globalSearch` needs per-result-type
+   scoping instead of one `moduleKey`, since it has none) and a
+   `createClient` audit-attribution bug fixed inline (documented under
+   item #20, not its own numbered item, since it was a one-line fix to
+   the exact concern item #1 already covers).
+3. **Immediate next:** item #21 — storage-route ownership scoping. Still
+   blocked on a product decision about cross-role document visibility,
+   not a code question.
+4. **Next sprint:** items #4–#9 (High) — billing/matter lifecycle
    completeness gaps. Sequence #4 (TimeEntry CRUD) before #6 (void
    invoice) since voiding may need to un-invoice time entries.
-4. **Following sprint:** items #10–#15 (Medium) — mostly small, mechanical
-   fixes; bundle #14 with the #20 follow-up since both touch the same
-   files.
-5. **Opportunistic/backlog:** items #16–#19 (Low) — no urgency, pick up
+5. **Following sprint:** items #10–#15, #22 (Medium) — mostly small,
+   mechanical fixes.
+6. **Opportunistic/backlog:** items #16–#19 (Low) — no urgency, pick up
    when touching adjacent code anyway.
 
 No item on this register requires a rewrite or architectural change —
 every fix applies a pattern, guard, or hook that already exists elsewhere
 in the codebase. This is the practical upside of the architecture holding
 up under review: the debt is real, but it's all wiring debt, not design
-debt — and three of the highest-priority items were closed in this same
-pass as proof of that.
+debt — and four of the highest-priority items have now been closed across
+these two passes as proof of that.

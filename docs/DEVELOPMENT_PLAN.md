@@ -102,6 +102,43 @@ DrvFs filesystem-event unreliability) caused `/login` to 404 after rapid
 dev-server restarts during testing; `rm -rf .next` before restarting fixed
 it. Unrelated to any change in this pass.
 
+## Role-specific authorization pass (Technical Debt item #20)
+
+A follow-up to the SaaS-readiness pass's Critical fix #1 (session-required
+on six previously-unprotected action files): that fix made every action
+require *a* valid session, but not a specific role. This pass added the
+role-specific layer using `src/lib/platform/auth/withPermission()` — built
+during the SaaS-readiness pass but wired into zero call sites until now.
+
+- Wrapped every exported function in `features/{matters,clients,clauses,
+  templates,matter-assistant}/actions.ts` with `withPermission()`, each
+  given a `PermissionCheck` read off the existing F/C/V/— matrix in
+  `permission-matrix.ts` — the same matrix Settings already renders, so
+  enforcement now matches what the UI claims a role can do.
+- Widened `PermissionCheck.moduleKey` to a new `PermissionModuleKey` type
+  (`ModuleKey | "matter-assistant"`) so the Matter Assistant panel — a
+  real matrix row ("AI Assistant") with no corresponding navigable route —
+  can be gated without adding a fake entry to `ModuleKey`.
+- `search/actions.ts`'s `globalSearch` was deliberately left out: it
+  aggregates nine entity types with no single matching `moduleKey`.
+  Tracked as new Technical Debt item #22 (per-result-type scoping) rather
+  than force-fit to one arbitrary key.
+- Found and fixed, in the same file and same pass: `clients/actions.ts`'s
+  `createClient` was logging the audit-trail `actorId` as the
+  caller-supplied `relationshipManagerId` instead of the authenticated
+  actor — a gap in Critical fix #1's original sweep, closed the same way
+  the rest of that file already was.
+- Added two permission-service unit test cases covering the new
+  `clients` `full`-tier gate and the synthetic `matter-assistant` key.
+- Verified: `npx tsc --noEmit`, `eslint`, full unit + integration suite
+  (43 unit tests, up from 41), production build, and a live Playwright
+  smoke test against the running dev server (Managing Partner creating a
+  client through the real form, viewing the Matters list) all pass with
+  the new gates active — no regression on the legitimate path.
+
+See `docs/TECHNICAL_DEBT.md` item #20 for the full per-function gate
+table and reasoning.
+
 ## Known follow-up work (not done in this pass, intentionally out of scope)
 
 1. Wire `use-breadcrumbs` into `PageHeader`/role layouts so breadcrumbs actually render (currently only the hook + primitive exist).
