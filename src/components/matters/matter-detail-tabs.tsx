@@ -26,11 +26,9 @@ type ResearchArticle = Awaited<ReturnType<typeof getRelatedResearch>>[number];
 
 export function MatterDetailTabs({
   matter,
-  currentUserId,
   research,
 }: {
   matter: MatterDetail;
-  currentUserId: string;
   research: ResearchArticle[];
 }) {
   const [selectedHearing, setSelectedHearing] = React.useState<MatterDetail["hearings"][number] | null>(null);
@@ -156,7 +154,7 @@ export function MatterDetailTabs({
       </TabsContent>
 
       <TabsContent value="notes" className="space-y-3">
-        <AddNoteForm matterId={matter.id} authorId={currentUserId} />
+        <AddNoteForm matterId={matter.id} />
         {matter.notes.length === 0 ? (
           <EmptyState icon={StickyNote} title="No notes yet" />
         ) : (

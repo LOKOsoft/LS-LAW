@@ -6,12 +6,12 @@ import { Role } from "@/generated/prisma/client";
 import { JUNIOR_ASSOCIATE_BASE } from "@/lib/constants/nav";
 
 export default async function JuniorAssociateDuplicateClientsPage() {
-  const [groups, currentUser] = await Promise.all([getDuplicateClientGroups(), requireUser(Role.JUNIOR_ASSOCIATE)]);
+  const [groups] = await Promise.all([getDuplicateClientGroups(), requireUser(Role.JUNIOR_ASSOCIATE)]);
 
   return (
     <div>
       <PageHeader title="Duplicate Detection" description="Clients whose name, email, or phone match another record — review and merge to keep the client base clean." />
-      <DuplicateDetectionView groups={groups} currentUserId={currentUser.id} basePath={JUNIOR_ASSOCIATE_BASE} />
+      <DuplicateDetectionView groups={groups} basePath={JUNIOR_ASSOCIATE_BASE} />
     </div>
   );
 }

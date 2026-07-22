@@ -6,12 +6,12 @@ import { Role } from "@/generated/prisma/client";
 import { PARALEGAL_BASE } from "@/lib/constants/nav";
 
 export default async function ParalegalDuplicateClientsPage() {
-  const [groups, currentUser] = await Promise.all([getDuplicateClientGroups(), requireUser(Role.PARALEGAL)]);
+  const [groups] = await Promise.all([getDuplicateClientGroups(), requireUser(Role.PARALEGAL)]);
 
   return (
     <div>
       <PageHeader title="Duplicate Detection" description="Clients whose name, email, or phone match another record — review and merge to keep the client base clean." />
-      <DuplicateDetectionView groups={groups} currentUserId={currentUser.id} basePath={PARALEGAL_BASE} />
+      <DuplicateDetectionView groups={groups} basePath={PARALEGAL_BASE} />
     </div>
   );
 }

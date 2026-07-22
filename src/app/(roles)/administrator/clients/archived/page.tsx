@@ -5,13 +5,13 @@ import { requireUser } from "@/lib/auth/dal";
 import { ADMINISTRATOR_BASE } from "@/lib/constants/nav";
 
 export default async function AdministratorArchivedClientsPage() {
-  const currentUser = await requireUser();
+  await requireUser();
   const clients = await getArchivedClients();
 
   return (
     <div>
       <PageHeader title="Archived Clients" description="Clients removed from the active list. Every matter, invoice, and document stays intact and restorable." />
-      <ArchivedClientsTable clients={clients} currentUserId={currentUser.id} basePath={ADMINISTRATOR_BASE} canRestore={true} />
+      <ArchivedClientsTable clients={clients} basePath={ADMINISTRATOR_BASE} canRestore={true} />
     </div>
   );
 }

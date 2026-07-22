@@ -33,12 +33,12 @@ export default async function JuniorAssociateClientDetailPage({ params }: { para
         client={client}
         actions={
           <>
-            <EditClientForm client={client} managers={managers} currentUserId={user.id} />
-            <ClientActionsMenu client={client} otherClients={otherClients} currentUserId={user.id} basePath={JUNIOR_ASSOCIATE_BASE} />
+            <EditClientForm client={client} managers={managers} />
+            <ClientActionsMenu client={client} otherClients={otherClients} basePath={JUNIOR_ASSOCIATE_BASE} />
           </>
         }
       />
-      <ClientDetailTabs client={client} currentUserId={user.id} basePath={JUNIOR_ASSOCIATE_BASE} activityLog={activityLog} />
+      <ClientDetailTabs client={client} basePath={JUNIOR_ASSOCIATE_BASE} activityLog={activityLog} />
     </div>
   );
 }

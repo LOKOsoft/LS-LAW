@@ -10,11 +10,9 @@ import { createNote } from "@/features/clients/actions";
 export function AddNoteForm({
   clientId,
   matterId,
-  authorId,
 }: {
   clientId?: string;
   matterId?: string;
-  authorId: string;
 }) {
   const [body, setBody] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -24,7 +22,7 @@ export function AddNoteForm({
     if (body.trim().length < 2) return;
     setIsSubmitting(true);
     try {
-      await createNote({ body, clientId, matterId, authorId });
+      await createNote({ body, clientId, matterId });
       setBody("");
       toast.success("Note added");
       router.refresh();

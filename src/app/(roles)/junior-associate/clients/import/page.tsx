@@ -6,12 +6,12 @@ import { Role } from "@/generated/prisma/client";
 import { JUNIOR_ASSOCIATE_BASE } from "@/lib/constants/nav";
 
 export default async function JuniorAssociateImportClientsPage() {
-  const [managers, currentUser] = await Promise.all([getRelationshipManagerOptions(), requireUser(Role.JUNIOR_ASSOCIATE)]);
+  const [managers] = await Promise.all([getRelationshipManagerOptions(), requireUser(Role.JUNIOR_ASSOCIATE)]);
 
   return (
     <div>
       <PageHeader title="Import Clients" description="Bring in clients in bulk from a CSV export of another system." />
-      <ImportClientsView managers={managers} currentUserId={currentUser.id} basePath={JUNIOR_ASSOCIATE_BASE} />
+      <ImportClientsView managers={managers} basePath={JUNIOR_ASSOCIATE_BASE} />
     </div>
   );
 }

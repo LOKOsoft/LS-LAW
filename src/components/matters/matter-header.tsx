@@ -8,11 +8,9 @@ import type { MatterDetail } from "@/features/matters/queries";
 export function MatterHeader({
   matter,
   basePath = "/managing-partner",
-  currentUserId,
 }: {
   matter: MatterDetail;
   basePath?: string;
-  currentUserId: string;
 }) {
   const totalBilled = matter.invoices.reduce((sum, inv) => sum + inv.total, 0);
   const openTasks = matter.tasks.filter((t) => t.status !== "DONE").length;
@@ -46,7 +44,7 @@ export function MatterHeader({
         </div>
       </div>
 
-      <MatterStageControl matter={matter} currentUserId={currentUserId} />
+      <MatterStageControl matter={matter} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card className="py-4">

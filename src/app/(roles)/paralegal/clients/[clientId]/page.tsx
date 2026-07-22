@@ -33,12 +33,12 @@ export default async function ParalegalClientDetailPage({ params }: { params: Pr
         client={client}
         actions={
           <>
-            <EditClientForm client={client} managers={managers} currentUserId={user.id} />
-            <ClientActionsMenu client={client} otherClients={otherClients} currentUserId={user.id} basePath={PARALEGAL_BASE} />
+            <EditClientForm client={client} managers={managers} />
+            <ClientActionsMenu client={client} otherClients={otherClients} basePath={PARALEGAL_BASE} />
           </>
         }
       />
-      <ClientDetailTabs client={client} currentUserId={user.id} basePath={PARALEGAL_BASE} activityLog={activityLog} />
+      <ClientDetailTabs client={client} basePath={PARALEGAL_BASE} activityLog={activityLog} />
     </div>
   );
 }

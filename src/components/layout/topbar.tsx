@@ -13,6 +13,8 @@ import {
   UploadCloud,
   ChevronDown,
   LogOut,
+  Menu,
+  Scale,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -26,8 +28,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { GlobalSearch } from "@/components/shared/global-search";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { formatTimeAgo, initials } from "@/lib/format";
 import { logout } from "@/features/auth/actions";
 import { markNotificationRead, markAllNotificationsRead } from "@/features/notifications/actions";
@@ -54,6 +58,7 @@ const ALL_QUICK_ACTIONS: { label: string; icon: typeof Briefcase; key: ModuleKey
 ];
 
 export function Topbar({ firmName, userName, userTitle, notifications, unreadCount, basePath, allowedKeys }: TopbarProps) {
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const allowed = new Set(allowedKeys);
   const quickActions = ALL_QUICK_ACTIONS.filter((action) => allowed.has(action.key)).map((action) => ({
     label: action.label,
@@ -65,6 +70,26 @@ export function Topbar({ firmName, userName, userTitle, notifications, unreadCou
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md sm:px-6">
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetTrigger asChild>
+          <Button size="icon" variant="outline" className="shrink-0 lg:hidden" aria-label="Open navigation menu">
+            <Menu className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-72 bg-sidebar p-0 text-sidebar-foreground">
+          <SheetHeader className="flex-row items-center gap-2.5 space-y-0 border-b border-sidebar-border px-5 py-4">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Scale className="size-4.5" />
+            </div>
+            <div className="leading-tight">
+              <SheetTitle className="text-sm font-semibold tracking-tight text-sidebar-foreground">LEXORA</SheetTitle>
+              <p className="text-[11px] text-muted-foreground">Lexora &amp; Associates</p>
+            </div>
+          </SheetHeader>
+          <SidebarNav basePath={basePath} allowedKeys={allowedKeys} onNavigate={() => setMobileNavOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
       <div className="hidden shrink-0 flex-col lg:flex">
         <p className="text-sm font-semibold text-foreground">{firmName}</p>
         <p className="text-xs text-muted-foreground">{dateLabel}</p>

@@ -10,15 +10,15 @@ export default async function MatterDetailPage({ params }: { params: Promise<{ m
   const matter = await getMatterById(matterId);
   if (!matter) notFound();
 
-  const [currentUser, research] = await Promise.all([
+  const [, research] = await Promise.all([
     requireUser(),
     getRelatedResearch(matter.practiceArea.name),
   ]);
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} basePath={ADMINISTRATOR_BASE} currentUserId={currentUser.id} />
-      <MatterDetailTabs matter={matter} currentUserId={currentUser.id} research={research} />
+      <MatterHeader matter={matter} basePath={ADMINISTRATOR_BASE} />
+      <MatterDetailTabs matter={matter} research={research} />
     </div>
   );
 }

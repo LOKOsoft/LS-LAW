@@ -19,11 +19,9 @@ const REASON_LABEL: Record<DuplicateClientGroup["reason"], string> = {
 
 export function DuplicateDetectionView({
   groups,
-  currentUserId,
   basePath = "/managing-partner",
 }: {
   groups: DuplicateClientGroup[];
-  currentUserId: string;
   basePath?: string;
 }) {
   const [mergeGroupKey, setMergeGroupKey] = React.useState<string | null>(null);
@@ -95,7 +93,6 @@ export function DuplicateDetectionView({
                 onOpenChange={(open) => !open && setMergeGroupKey(null)}
                 primaryClient={primaryClient}
                 candidates={group.clients}
-                currentUserId={currentUserId}
                 basePath={basePath}
               />
             ) : null}

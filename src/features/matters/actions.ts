@@ -9,8 +9,10 @@ import { notifyUsers } from "@/lib/services/notifications";
 import { buildDefaultMatterTasks } from "@/lib/services/task-templates";
 import { assertMatterHasNoUnpaidInvoices, assertMatterHasNoPendingHearings } from "@/lib/services/validation";
 import { assertValidStageTransition, MATTER_STAGE_LABELS } from "@/lib/services/workflow";
+import { requireUser } from "@/lib/auth/dal";
 
 export async function createMatter(input: CreateMatterInput) {
+  await requireUser();
   const data = createMatterSchema.parse(input);
 
   const count = await prisma.matter.count();
@@ -86,7 +88,9 @@ export async function createMatter(input: CreateMatterInput) {
 }
 
 /** Moves a matter to the next stage in its pipeline, enforcing sequence and closure/archive business rules. */
-export async function advanceMatterStage(matterId: string, targetStage: MatterStage, actorId: string) {
+export async function advanceMatterStage(matterId: string, targetStage: MatterStage) {
+  const actor = await requireUser();
+  const actorId = actor.id;
   const matter = await prisma.matter.findUniqueOrThrow({ where: { id: matterId } });
   assertValidStageTransition(matter.stage, targetStage);
 
@@ -162,10 +166,12 @@ async function terminateMatter(matterId: string, actorId: string, targetStage: t
   return updated;
 }
 
-export async function closeMatter(matterId: string, actorId: string) {
-  return terminateMatter(matterId, actorId, MatterStage.CLOSURE);
+export async function closeMatter(matterId: string) {
+  const actor = await requireUser();
+  return terminateMatter(matterId, actor.id, MatterStage.CLOSURE);
 }
 
-export async function archiveMatter(matterId: string, actorId: string) {
-  return terminateMatter(matterId, actorId, MatterStage.ARCHIVE);
+export async function archiveMatter(matterId: string) {
+  const actor = await requireUser();
+  return terminateMatter(matterId, actor.id, MatterStage.ARCHIVE);
 }

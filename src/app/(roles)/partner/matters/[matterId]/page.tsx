@@ -17,8 +17,8 @@ export default async function PartnerMatterDetailPage({ params }: { params: Prom
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} basePath={PARTNER_BASE} currentUserId={user.id} />
-      <MatterDetailTabs matter={matter} currentUserId={user.id} research={research} />
+      <MatterHeader matter={matter} basePath={PARTNER_BASE} />
+      <MatterDetailTabs matter={matter} research={research} />
     </div>
   );
 }

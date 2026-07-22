@@ -5,13 +5,13 @@ import { requireUser } from "@/lib/auth/dal";
 import { RECEPTION_BASE } from "@/lib/constants/nav";
 
 export default async function ReceptionArchivedClientsPage() {
-  const currentUser = await requireUser();
+  await requireUser();
   const clients = await getArchivedClients();
 
   return (
     <div>
       <PageHeader title="Archived Clients" description="Clients removed from the active list. Every matter, invoice, and document stays intact and restorable." />
-      <ArchivedClientsTable clients={clients} currentUserId={currentUser.id} basePath={RECEPTION_BASE} canRestore={true} />
+      <ArchivedClientsTable clients={clients} basePath={RECEPTION_BASE} canRestore={true} />
     </div>
   );
 }

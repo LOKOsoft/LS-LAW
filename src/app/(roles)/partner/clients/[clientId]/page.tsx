@@ -33,12 +33,12 @@ export default async function PartnerClientDetailPage({ params }: { params: Prom
         client={client}
         actions={
           <>
-            <EditClientForm client={client} managers={managers} currentUserId={user.id} />
-            <ClientActionsMenu client={client} otherClients={otherClients} currentUserId={user.id} basePath={PARTNER_BASE} />
+            <EditClientForm client={client} managers={managers} />
+            <ClientActionsMenu client={client} otherClients={otherClients} basePath={PARTNER_BASE} />
           </>
         }
       />
-      <ClientDetailTabs client={client} currentUserId={user.id} basePath={PARTNER_BASE} activityLog={activityLog} />
+      <ClientDetailTabs client={client} basePath={PARTNER_BASE} activityLog={activityLog} />
     </div>
   );
 }

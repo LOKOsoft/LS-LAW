@@ -15,12 +15,10 @@ import { useTableFilters } from "@/hooks/use-table-filters";
 
 export function ArchivedClientsTable({
   clients,
-  currentUserId,
   basePath = "/managing-partner",
   canRestore = true,
 }: {
   clients: ClientListItem[];
-  currentUserId: string;
   basePath?: string;
   canRestore?: boolean;
 }) {
@@ -31,7 +29,7 @@ export function ArchivedClientsTable({
 
   async function handleRestore(clientId: string, name: string) {
     try {
-      await restoreClient(clientId, currentUserId);
+      await restoreClient(clientId);
       toast.success("Client restored", { description: `${name} is active again.` });
       router.refresh();
     } catch {

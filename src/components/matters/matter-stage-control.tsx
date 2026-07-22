@@ -13,7 +13,7 @@ import type { MatterDetail } from "@/features/matters/queries";
 
 type Stage = MatterDetail["stage"];
 
-export function MatterStageControl({ matter, currentUserId }: { matter: MatterDetail; currentUserId: string }) {
+export function MatterStageControl({ matter }: { matter: MatterDetail }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [closeOpen, setCloseOpen] = React.useState(false);
@@ -27,7 +27,7 @@ export function MatterStageControl({ matter, currentUserId }: { matter: MatterDe
     if (!nextStage) return;
     setIsSubmitting(true);
     try {
-      await advanceMatterStage(matter.id, nextStage as Stage, currentUserId);
+      await advanceMatterStage(matter.id, nextStage as Stage);
       toast.success(`Matter advanced to ${MATTER_STAGE_LABELS[nextStage]}`);
       router.refresh();
     } catch (error) {
@@ -40,7 +40,7 @@ export function MatterStageControl({ matter, currentUserId }: { matter: MatterDe
   async function handleClose() {
     setIsSubmitting(true);
     try {
-      await closeMatter(matter.id, currentUserId);
+      await closeMatter(matter.id);
       toast.success("Matter closed");
       router.refresh();
     } catch (error) {
@@ -53,7 +53,7 @@ export function MatterStageControl({ matter, currentUserId }: { matter: MatterDe
   async function handleArchive() {
     setIsSubmitting(true);
     try {
-      await archiveMatter(matter.id, currentUserId);
+      await archiveMatter(matter.id);
       toast.success("Matter archived");
       router.refresh();
     } catch (error) {

@@ -5,12 +5,12 @@ import { requireUser } from "@/lib/auth/dal";
 import { RECEPTION_BASE } from "@/lib/constants/nav";
 
 export default async function ReceptionImportClientsPage() {
-  const [managers, currentUser] = await Promise.all([getRelationshipManagerOptions(), requireUser()]);
+  const [managers] = await Promise.all([getRelationshipManagerOptions(), requireUser()]);
 
   return (
     <div>
       <PageHeader title="Import Clients" description="Bring in clients in bulk from a CSV export of another system." />
-      <ImportClientsView managers={managers} currentUserId={currentUser.id} basePath={RECEPTION_BASE} />
+      <ImportClientsView managers={managers} basePath={RECEPTION_BASE} />
     </div>
   );
 }

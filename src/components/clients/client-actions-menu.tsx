@@ -20,12 +20,10 @@ import type { ClientDetail, ClientListItem } from "@/features/clients/queries";
 export function ClientActionsMenu({
   client,
   otherClients,
-  currentUserId,
   basePath = "/managing-partner",
 }: {
   client: ClientDetail;
   otherClients: ClientListItem[];
-  currentUserId: string;
   basePath?: string;
 }) {
   const [archiveOpen, setArchiveOpen] = React.useState(false);
@@ -36,10 +34,10 @@ export function ClientActionsMenu({
   async function handleArchiveToggle() {
     try {
       if (isArchived) {
-        await restoreClient(client.id, currentUserId);
+        await restoreClient(client.id);
         toast.success("Client restored", { description: `${client.name} is active again.` });
       } else {
-        await archiveClient(client.id, currentUserId);
+        await archiveClient(client.id);
         toast.success("Client archived", { description: `${client.name} moved to Archived Clients.` });
       }
       router.refresh();
@@ -88,7 +86,6 @@ export function ClientActionsMenu({
         onOpenChange={setMergeOpen}
         primaryClient={client}
         candidates={otherClients}
-        currentUserId={currentUserId}
         basePath={basePath}
       />
     </>

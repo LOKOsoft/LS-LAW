@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
+import { requireUser } from "@/lib/auth/dal";
 
 export type GlobalSearchResult = {
   clients: { id: string; name: string; clientNumber: string }[];
@@ -27,6 +28,7 @@ const EMPTY_RESULT: GlobalSearchResult = {
 };
 
 export async function globalSearch(query: string): Promise<GlobalSearchResult> {
+  await requireUser();
   const q = query.trim();
   if (q.length < 2) {
     return EMPTY_RESULT;

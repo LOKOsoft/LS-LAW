@@ -17,8 +17,8 @@ export default async function SeniorPartnerMatterDetailPage({ params }: { params
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} basePath={SENIOR_PARTNER_BASE} currentUserId={user.id} />
-      <MatterDetailTabs matter={matter} currentUserId={user.id} research={research} />
+      <MatterHeader matter={matter} basePath={SENIOR_PARTNER_BASE} />
+      <MatterDetailTabs matter={matter} research={research} />
     </div>
   );
 }

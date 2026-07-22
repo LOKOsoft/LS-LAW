@@ -27,7 +27,6 @@ export const createNoteSchema = z.object({
   body: z.string().min(2, "Note cannot be empty"),
   clientId: z.string().optional(),
   matterId: z.string().optional(),
-  authorId: z.string().min(1),
 });
 
 export type CreateNoteInput = z.infer<typeof createNoteSchema>;

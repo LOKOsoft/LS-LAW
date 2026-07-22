@@ -17,13 +17,11 @@ export function MergeClientDialog({
   onOpenChange,
   primaryClient,
   candidates,
-  currentUserId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   primaryClient: MergeableClient;
   candidates: ClientListItem[];
-  currentUserId: string;
   basePath?: string;
 }) {
   const [duplicateId, setDuplicateId] = React.useState("");
@@ -36,7 +34,7 @@ export function MergeClientDialog({
     if (!duplicateId) return;
     setIsSubmitting(true);
     try {
-      await mergeClients({ primaryClientId: primaryClient.id, duplicateClientId: duplicateId }, currentUserId);
+      await mergeClients({ primaryClientId: primaryClient.id, duplicateClientId: duplicateId });
       toast.success("Clients merged", {
         description: "All matters, invoices, and records were moved onto this client. The duplicate was archived.",
       });

@@ -33,12 +33,12 @@ export default async function AssociateClientDetailPage({ params }: { params: Pr
         client={client}
         actions={
           <>
-            <EditClientForm client={client} managers={managers} currentUserId={user.id} />
-            <ClientActionsMenu client={client} otherClients={otherClients} currentUserId={user.id} basePath={ASSOCIATE_BASE} />
+            <EditClientForm client={client} managers={managers} />
+            <ClientActionsMenu client={client} otherClients={otherClients} basePath={ASSOCIATE_BASE} />
           </>
         }
       />
-      <ClientDetailTabs client={client} currentUserId={user.id} basePath={ASSOCIATE_BASE} activityLog={activityLog} />
+      <ClientDetailTabs client={client} basePath={ASSOCIATE_BASE} activityLog={activityLog} />
     </div>
   );
 }

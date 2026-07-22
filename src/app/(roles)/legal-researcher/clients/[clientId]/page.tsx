@@ -33,12 +33,12 @@ export default async function LegalResearcherClientDetailPage({ params }: { para
         client={client}
         actions={
           <>
-            <EditClientForm client={client} managers={managers} currentUserId={user.id} />
-            <ClientActionsMenu client={client} otherClients={otherClients} currentUserId={user.id} basePath={LEGAL_RESEARCHER_BASE} />
+            <EditClientForm client={client} managers={managers} />
+            <ClientActionsMenu client={client} otherClients={otherClients} basePath={LEGAL_RESEARCHER_BASE} />
           </>
         }
       />
-      <ClientDetailTabs client={client} currentUserId={user.id} basePath={LEGAL_RESEARCHER_BASE} activityLog={activityLog} />
+      <ClientDetailTabs client={client} basePath={LEGAL_RESEARCHER_BASE} activityLog={activityLog} />
     </div>
   );
 }

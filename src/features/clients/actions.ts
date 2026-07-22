@@ -17,8 +17,10 @@ import {
 } from "@/features/clients/schema";
 import { findSimilarClients } from "@/features/clients/queries";
 import { assertClientHasNoActiveMatters } from "@/lib/services/validation";
+import { requireUser } from "@/lib/auth/dal";
 
 export async function checkSimilarClientNames(name: string) {
+  await requireUser();
   return findSimilarClients(name);
 }
 
@@ -28,6 +30,7 @@ async function nextClientNumber() {
 }
 
 export async function createClient(input: CreateClientInput) {
+  await requireUser();
   const data = createClientSchema.parse(input);
   const clientNumber = await nextClientNumber();
 
@@ -61,7 +64,9 @@ export async function createClient(input: CreateClientInput) {
   return client;
 }
 
-export async function updateClient(clientId: string, input: UpdateClientInput, actorId: string) {
+export async function updateClient(clientId: string, input: UpdateClientInput) {
+  const actor = await requireUser();
+  const actorId = actor.id;
   const data = updateClientSchema.parse(input);
 
   const client = await prisma.client.update({
@@ -98,7 +103,9 @@ export async function updateClient(clientId: string, input: UpdateClientInput, a
   return client;
 }
 
-export async function reassignRelationshipManager(clientId: string, managerId: string, actorId: string) {
+export async function reassignRelationshipManager(clientId: string, managerId: string) {
+  const actor = await requireUser();
+  const actorId = actor.id;
   const client = await prisma.client.update({ where: { id: clientId }, data: { relationshipManagerId: managerId } });
 
   await prisma.activityLog.create({
@@ -115,7 +122,9 @@ export async function reassignRelationshipManager(clientId: string, managerId: s
   return client;
 }
 
-export async function archiveClient(clientId: string, actorId: string) {
+export async function archiveClient(clientId: string) {
+  const actor = await requireUser();
+  const actorId = actor.id;
   await assertClientHasNoActiveMatters(clientId);
   const client = await prisma.client.update({ where: { id: clientId }, data: { status: "ARCHIVED" } });
 
@@ -133,7 +142,9 @@ export async function archiveClient(clientId: string, actorId: string) {
   return client;
 }
 
-export async function restoreClient(clientId: string, actorId: string) {
+export async function restoreClient(clientId: string) {
+  const actor = await requireUser();
+  const actorId = actor.id;
   const client = await prisma.client.update({ where: { id: clientId }, data: { status: "ACTIVE" } });
 
   await prisma.activityLog.create({
@@ -150,7 +161,9 @@ export async function restoreClient(clientId: string, actorId: string) {
   return client;
 }
 
-export async function mergeClients(input: MergeClientsInput, actorId: string) {
+export async function mergeClients(input: MergeClientsInput) {
+  const actor = await requireUser();
+  const actorId = actor.id;
   const { primaryClientId, duplicateClientId } = mergeClientsSchema.parse(input);
 
   await prisma.$transaction([
@@ -185,7 +198,9 @@ export async function mergeClients(input: MergeClientsInput, actorId: string) {
   return prisma.client.findUnique({ where: { id: primaryClientId } });
 }
 
-export async function bulkImportClients(rows: ImportClientRow[], actorId: string) {
+export async function bulkImportClients(rows: ImportClientRow[]) {
+  const actor = await requireUser();
+  const actorId = actor.id;
   const parsedRows = rows.map((row) => importClientRowSchema.parse(row));
   let nextNumber = (await prisma.client.count()) + 1;
 
@@ -226,13 +241,14 @@ export async function bulkImportClients(rows: ImportClientRow[], actorId: string
 }
 
 export async function createNote(input: CreateNoteInput) {
+  const actor = await requireUser();
   const data = createNoteSchema.parse(input);
   const note = await prisma.note.create({
     data: {
       body: data.body,
       clientId: data.clientId || null,
       matterId: data.matterId || null,
-      authorId: data.authorId,
+      authorId: actor.id,
     },
   });
 

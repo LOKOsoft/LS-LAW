@@ -15,12 +15,10 @@ const communicationIcon = { EMAIL: Mail, CALL: Phone, MEETING: Users, LETTER: Fi
 
 export function ClientDetailTabs({
   client,
-  currentUserId,
   basePath = "/managing-partner",
   activityLog = [],
 }: {
   client: ClientDetail;
-  currentUserId: string;
   basePath?: string;
   activityLog?: ClientActivityItem[];
 }) {
@@ -159,7 +157,7 @@ export function ClientDetailTabs({
       </TabsContent>
 
       <TabsContent value="notes" className="space-y-3">
-        <AddNoteForm clientId={client.id} authorId={currentUserId} />
+        <AddNoteForm clientId={client.id} />
         {client.notes.length === 0 ? (
           <EmptyState icon={StickyNote} title="No notes yet" description="Internal notes about this client will appear here." />
         ) : (

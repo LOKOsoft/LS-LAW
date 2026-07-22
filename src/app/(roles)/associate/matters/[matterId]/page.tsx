@@ -17,8 +17,8 @@ export default async function AssociateMatterDetailPage({ params }: { params: Pr
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} basePath={ASSOCIATE_BASE} currentUserId={user.id} />
-      <MatterDetailTabs matter={matter} currentUserId={user.id} research={research} />
+      <MatterHeader matter={matter} basePath={ASSOCIATE_BASE} />
+      <MatterDetailTabs matter={matter} research={research} />
     </div>
   );
 }

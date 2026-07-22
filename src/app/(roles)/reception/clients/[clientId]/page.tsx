@@ -9,7 +9,7 @@ import { RECEPTION_BASE } from "@/lib/constants/nav";
 
 export default async function ReceptionClientDetailPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params;
-  const [client, currentUser, activityLog, otherClients, managers] = await Promise.all([
+  const [client, , activityLog, otherClients, managers] = await Promise.all([
     getClientById(clientId),
     requireUser(),
     getClientActivityLog(clientId),
@@ -25,12 +25,12 @@ export default async function ReceptionClientDetailPage({ params }: { params: Pr
         client={client}
         actions={
           <>
-            <EditClientForm client={client} managers={managers} currentUserId={currentUser.id} />
-            <ClientActionsMenu client={client} otherClients={otherClients} currentUserId={currentUser.id} basePath={RECEPTION_BASE} />
+            <EditClientForm client={client} managers={managers} />
+            <ClientActionsMenu client={client} otherClients={otherClients} basePath={RECEPTION_BASE} />
           </>
         }
       />
-      <ClientDetailTabs client={client} currentUserId={currentUser.id} basePath={RECEPTION_BASE} activityLog={activityLog} />
+      <ClientDetailTabs client={client} basePath={RECEPTION_BASE} activityLog={activityLog} />
     </div>
   );
 }

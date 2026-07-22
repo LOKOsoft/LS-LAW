@@ -10,12 +10,12 @@ export default async function AccountsMatterDetailPage({ params }: { params: Pro
   const matter = await getMatterById(matterId);
   if (!matter) notFound();
 
-  const [currentUser, research] = await Promise.all([requireUser(), getRelatedResearch(matter.practiceArea.name)]);
+  const [, research] = await Promise.all([requireUser(), getRelatedResearch(matter.practiceArea.name)]);
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} basePath={ACCOUNTS_BASE} currentUserId={currentUser.id} />
-      <MatterDetailTabs matter={matter} currentUserId={currentUser.id} research={research} />
+      <MatterHeader matter={matter} basePath={ACCOUNTS_BASE} />
+      <MatterDetailTabs matter={matter} research={research} />
     </div>
   );
 }

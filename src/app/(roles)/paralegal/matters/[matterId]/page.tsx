@@ -17,8 +17,8 @@ export default async function ParalegalMatterDetailPage({ params }: { params: Pr
 
   return (
     <div className="space-y-6 pb-8">
-      <MatterHeader matter={matter} basePath={PARALEGAL_BASE} currentUserId={user.id} />
-      <MatterDetailTabs matter={matter} currentUserId={user.id} research={research} />
+      <MatterHeader matter={matter} basePath={PARALEGAL_BASE} />
+      <MatterDetailTabs matter={matter} research={research} />
     </div>
   );
 }

@@ -41,11 +41,9 @@ type ParsedRow = {
 
 export function ImportClientsView({
   managers,
-  currentUserId,
   basePath = "/managing-partner",
 }: {
   managers: ManagerOption[];
-  currentUserId: string;
   basePath?: string;
 }) {
   const [raw, setRaw] = React.useState("");
@@ -112,7 +110,7 @@ export function ImportClientsView({
     if (validRows.length === 0) return;
     setIsSubmitting(true);
     try {
-      const created = await bulkImportClients(validRows, currentUserId);
+      const created = await bulkImportClients(validRows);
       toast.success(`Imported ${created.length} client${created.length === 1 ? "" : "s"}`, {
         description: "New clients are now visible in the client list.",
       });

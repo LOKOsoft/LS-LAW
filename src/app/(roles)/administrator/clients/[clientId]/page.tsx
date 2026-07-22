@@ -9,7 +9,7 @@ import { ADMINISTRATOR_BASE } from "@/lib/constants/nav";
 
 export default async function AdministratorClientDetailPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params;
-  const [client, currentUser, activityLog, otherClients, managers] = await Promise.all([
+  const [client, , activityLog, otherClients, managers] = await Promise.all([
     getClientById(clientId),
     requireUser(),
     getClientActivityLog(clientId),
@@ -25,12 +25,12 @@ export default async function AdministratorClientDetailPage({ params }: { params
         client={client}
         actions={
           <>
-            <EditClientForm client={client} managers={managers} currentUserId={currentUser.id} />
-            <ClientActionsMenu client={client} otherClients={otherClients} currentUserId={currentUser.id} basePath={ADMINISTRATOR_BASE} />
+            <EditClientForm client={client} managers={managers} />
+            <ClientActionsMenu client={client} otherClients={otherClients} basePath={ADMINISTRATOR_BASE} />
           </>
         }
       />
-      <ClientDetailTabs client={client} currentUserId={currentUser.id} basePath={ADMINISTRATOR_BASE} activityLog={activityLog} />
+      <ClientDetailTabs client={client} basePath={ADMINISTRATOR_BASE} activityLog={activityLog} />
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { requireUser } from "@/lib/auth/dal";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params;
-  const [client, currentUser, activityLog, otherClients, managers] = await Promise.all([
+  const [client, , activityLog, otherClients, managers] = await Promise.all([
     getClientById(clientId),
     requireUser(),
     getClientActivityLog(clientId),
@@ -24,12 +24,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
         client={client}
         actions={
           <>
-            <EditClientForm client={client} managers={managers} currentUserId={currentUser.id} />
-            <ClientActionsMenu client={client} otherClients={otherClients} currentUserId={currentUser.id} />
+            <EditClientForm client={client} managers={managers} />
+            <ClientActionsMenu client={client} otherClients={otherClients} />
           </>
         }
       />
-      <ClientDetailTabs client={client} currentUserId={currentUser.id} activityLog={activityLog} />
+      <ClientDetailTabs client={client} activityLog={activityLog} />
     </div>
   );
 }

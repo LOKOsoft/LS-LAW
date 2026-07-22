@@ -19,11 +19,9 @@ import type { ClientDetail } from "@/features/clients/queries";
 export function EditClientForm({
   client,
   managers,
-  currentUserId,
 }: {
   client: ClientDetail;
   managers: ManagerOption[];
-  currentUserId: string;
 }) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -51,7 +49,7 @@ export function EditClientForm({
   async function onSubmit(values: UpdateClientInput) {
     setIsSubmitting(true);
     try {
-      await updateClient(client.id, values, currentUserId);
+      await updateClient(client.id, values);
       toast.success("Client updated");
       setOpen(false);
       router.refresh();

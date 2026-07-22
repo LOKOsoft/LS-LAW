@@ -12,7 +12,7 @@ export default async function LegalResearcherArchivedClientsPage() {
   return (
     <div>
       <PageHeader title="Archived Clients" description="Clients removed from the active list. Every matter, invoice, and document stays intact and restorable." />
-      <ArchivedClientsTable clients={clients} currentUserId={currentUser.id} basePath={LEGAL_RESEARCHER_BASE} canRestore={true} />
+      <ArchivedClientsTable clients={clients} basePath={LEGAL_RESEARCHER_BASE} canRestore={true} />
     </div>
   );
 }

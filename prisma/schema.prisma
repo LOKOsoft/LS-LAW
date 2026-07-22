@@ -289,6 +289,8 @@ model Office {
   createdAt    DateTime @default(now())
 
   users User[]
+
+  @@index([firmId])
 }
 
 model PracticeArea {
@@ -349,6 +351,9 @@ model User {
   researchNotes              ResearchNote[]
 
   createdAt DateTime @default(now())
+
+  @@index([officeId])
+  @@index([clientId])
 }
 
 model Session {
@@ -405,6 +410,8 @@ model Client {
   contacts           Contact[]
   portalUsers        User[]              @relation("PortalUser")
   generatedDocuments GeneratedDocument[]
+
+  @@index([relationshipManagerId])
 }
 
 model Matter {
@@ -449,6 +456,10 @@ model Matter {
   notifications      Notification[]
   generatedDocuments GeneratedDocument[]
   researchNotes      ResearchNote[]
+
+  @@index([clientId])
+  @@index([practiceAreaId])
+  @@index([responsibleAttorneyId])
 }
 
 model MatterTeamMember {
@@ -460,6 +471,7 @@ model MatterTeamMember {
   role     MatterTeamRole @default(SUPPORT)
 
   @@unique([matterId, userId])
+  @@index([userId])
 }
 
 model Company {
@@ -478,6 +490,8 @@ model Company {
   createdAt    DateTime @default(now())
 
   contacts Contact[]
+
+  @@index([clientId])
 }
 
 model Contact {
@@ -493,6 +507,9 @@ model Contact {
   isPrimary Boolean  @default(false)
   notes     String?
   createdAt DateTime @default(now())
+
+  @@index([companyId])
+  @@index([clientId])
 }
 
 model Hearing {
@@ -509,6 +526,8 @@ model Hearing {
   notes           String?
   nextHearingDate DateTime?
   createdAt       DateTime      @default(now())
+
+  @@index([matterId])
 }
 
 model CourtCase {
@@ -542,6 +561,9 @@ model Task {
   dueDate     DateTime?
   completedAt DateTime?
   createdAt   DateTime   @default(now())
+
+  @@index([matterId])
+  @@index([assigneeId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -561,6 +583,10 @@ model DocumentFolder {
   createdAt DateTime         @default(now())
 
   documents DocumentFile[]
+
+  @@index([parentId])
+  @@index([matterId])
+  @@index([clientId])
 }
 
 model DocumentFile {
@@ -597,6 +623,10 @@ model DocumentFile {
   versions                DocumentVersion[]
   comments                DocumentComment[]
   generatedDocumentSource GeneratedDocument?
+
+  @@index([folderId])
+  @@index([matterId])
+  @@index([clientId])
 }
 
 model DocumentComment {
@@ -607,6 +637,8 @@ model DocumentComment {
   author     User         @relation(fields: [authorId], references: [id])
   body       String
   createdAt  DateTime     @default(now())
+
+  @@index([documentId])
 }
 
 model DocumentVersion {
@@ -619,6 +651,8 @@ model DocumentVersion {
   uploadedById String
   uploadedBy   User         @relation(fields: [uploadedById], references: [id])
   createdAt    DateTime     @default(now())
+
+  @@index([documentId])
 }
 
 model Template {
@@ -718,6 +752,9 @@ model GeneratedDocument {
   updatedAt          DateTime                @updatedAt
 
   versions GeneratedDocumentVersion[]
+
+  @@index([matterId])
+  @@index([clientId])
 }
 
 model GeneratedDocumentVersion {
@@ -730,6 +767,8 @@ model GeneratedDocumentVersion {
   createdById         String
   createdBy           User              @relation(fields: [createdById], references: [id])
   createdAt           DateTime          @default(now())
+
+  @@index([generatedDocumentId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -758,6 +797,10 @@ model ResearchNote {
   matter    Matter?           @relation(fields: [matterId], references: [id], onDelete: SetNull)
   body      String
   createdAt DateTime          @default(now())
+
+  @@index([userId])
+  @@index([articleId])
+  @@index([matterId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -786,6 +829,9 @@ model Invoice {
 
   lineItems InvoiceLineItem[]
   payments  Payment[]
+
+  @@index([clientId])
+  @@index([matterId])
 }
 
 model InvoiceLineItem {
@@ -797,6 +843,8 @@ model InvoiceLineItem {
   rate        Float
   amount      Float
   type        LineItemType @default(FEE)
+
+  @@index([invoiceId])
 }
 
 model Payment {
@@ -809,6 +857,9 @@ model Payment {
   method    PaymentMethod @default(BANK_TRANSFER)
   reference String?
   paidAt    DateTime      @default(now())
+
+  @@index([invoiceId])
+  @@index([clientId])
 }
 
 model Expense {
@@ -826,6 +877,9 @@ model Expense {
   submittedById String
   submittedBy   User     @relation(fields: [submittedById], references: [id])
   createdAt     DateTime @default(now())
+
+  @@index([matterId])
+  @@index([clientId])
 }
 
 model Retainer {
@@ -839,6 +893,9 @@ model Retainer {
   status    RetainerStatus @default(ACTIVE)
   startDate DateTime       @default(now())
   createdAt DateTime       @default(now())
+
+  @@index([clientId])
+  @@index([matterId])
 }
 
 model TimeEntry {
@@ -854,6 +911,9 @@ model TimeEntry {
   rate        Float?
   invoiced    Boolean  @default(false)
   createdAt   DateTime @default(now())
+
+  @@index([matterId])
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -871,6 +931,9 @@ model Note {
   body      String
   pinned    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([matterId])
+  @@index([clientId])
 }
 
 model Meeting {
@@ -887,6 +950,9 @@ model Meeting {
   notes           String?
   status          MeetingStatus @default(SCHEDULED)
   createdAt       DateTime      @default(now())
+
+  @@index([matterId])
+  @@index([clientId])
 }
 
 model CommunicationLog {
@@ -901,6 +967,9 @@ model CommunicationLog {
   occurredAt DateTime          @default(now())
   loggedById String
   loggedBy   User              @relation(fields: [loggedById], references: [id])
+
+  @@index([matterId])
+  @@index([clientId])
 }
 
 model Announcement {
@@ -960,6 +1029,10 @@ model ActivityLog {
   actorId       String
   actor         User     @relation(fields: [actorId], references: [id])
   createdAt     DateTime @default(now())
+
+  @@index([matterId])
+  @@index([clientId])
+  @@index([actorId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -979,6 +1052,7 @@ model Notification {
   createdAt DateTime         @default(now())
 
   @@index([userId])
+  @@index([matterId])
 }
 
 model LeaveRequest {
@@ -994,6 +1068,8 @@ model LeaveRequest {
   approvedById String?
   approvedBy   User?       @relation("LeaveApprover", fields: [approvedById], references: [id])
   createdAt    DateTime    @default(now())
+
+  @@index([userId])
 }
 
 model AttendanceRecord {

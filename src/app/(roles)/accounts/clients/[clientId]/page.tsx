@@ -7,13 +7,13 @@ import { ACCOUNTS_BASE } from "@/lib/constants/nav";
 
 export default async function AccountsClientDetailPage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params;
-  const [client, currentUser] = await Promise.all([getClientById(clientId), requireUser()]);
+  const [client] = await Promise.all([getClientById(clientId), requireUser()]);
   if (!client) notFound();
 
   return (
     <div className="space-y-6 pb-8">
       <ClientHeader client={client} />
-      <ClientDetailTabs client={client} currentUserId={currentUser.id} basePath={ACCOUNTS_BASE} />
+      <ClientDetailTabs client={client} basePath={ACCOUNTS_BASE} />
     </div>
   );
 }

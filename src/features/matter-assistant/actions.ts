@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { getAIProvider, AIPipeline } from "@/lib/platform/ai";
+import { requireUser } from "@/lib/auth/dal";
 
 /**
  * The Matter Assistant (Step 7): real data (pending tasks, deadlines, risks,
@@ -18,6 +19,7 @@ import { getAIProvider, AIPipeline } from "@/lib/platform/ai";
  */
 
 export async function generateMatterSummary(matterId: string) {
+  await requireUser();
   const matter = await prisma.matter.findUniqueOrThrow({
     where: { id: matterId },
     include: {
@@ -32,6 +34,7 @@ export async function generateMatterSummary(matterId: string) {
 }
 
 export async function generateMeetingBrief(matterId: string, openItems: string[]) {
+  await requireUser();
   const matter = await prisma.matter.findUniqueOrThrow({ where: { id: matterId }, select: { title: true } });
   const pipeline = new AIPipeline(getAIProvider());
   const result = await pipeline.run<string>("matter.meeting-brief", {

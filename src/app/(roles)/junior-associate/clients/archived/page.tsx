@@ -12,7 +12,7 @@ export default async function JuniorAssociateArchivedClientsPage() {
   return (
     <div>
       <PageHeader title="Archived Clients" description="Clients removed from the active list. Every matter, invoice, and document stays intact and restorable." />
-      <ArchivedClientsTable clients={clients} currentUserId={currentUser.id} basePath={JUNIOR_ASSOCIATE_BASE} canRestore={true} />
+      <ArchivedClientsTable clients={clients} basePath={JUNIOR_ASSOCIATE_BASE} canRestore={true} />
     </div>
   );
 }
